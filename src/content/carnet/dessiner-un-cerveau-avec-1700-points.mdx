@@ -1,0 +1,47 @@
+---
+title: Dessiner un cerveau avec 1 700 points
+highlight: 1 700 points
+description: "Le cerveau de la page d'accueil n'est pas un modèle 3D importé. C'est une formule : une sphère déformée, un peu de bruit et une projection. Voici comment il est construit."
+date: 2026-11-07
+section: projets
+related: [ia, enseignement]
+---
+
+<BrainDemo />
+
+## Partir d'une sphère
+
+On tire 1 700 points au hasard sur une sphère. Chaque point a deux angles : u fait le tour, v va d'un pôle à l'autre. En étirant la sphère sur trois axes, on obtient déjà un œuf qui ressemble vaguement à une tête.<sup class="note-ref"><a href="#note-1">1</a></sup>
+
+<Note n={1}>Tirer v avec acos(2r − 1) évite que les points s'entassent aux pôles.</Note>
+
+## Plier la surface
+
+Les replis du cortex tiennent en une ligne : on multiplie le rayon par un produit de sinus. Ce n'est pas anatomique, mais c'est assez pour que l'œil y croie.<sup class="note-ref"><a href="#note-2">2</a></sup>
+
+<Note n={2}>Le cervelet est un second ellipsoïde, plus petit, collé à l'arrière.</Note>
+
+```js
+const u = R() * Math.PI * 2;
+const v = Math.acos(2 * R() - 1);
+
+// les replis : un produit de sinus
+const f = 1 + 0.045 * Math.sin(11 * u + 7 * v)
+              * Math.sin(9 * v - 5 * u);
+
+x = Math.sin(v) * Math.cos(u) * f;
+y = 0.74 * Math.cos(v) * f;  // aplati en hauteur
+z = 0.68 * Math.sin(v) * Math.sin(u) * f;
+```
+
+## Donner du volume sans 3D
+
+Une fois tournés, les points sont triés du plus loin au plus proche. Les plus proches sont plus gros et plus opaques. Pas de lumière, pas d'ombre : la densité suffit à créer le volume.<sup class="note-ref"><a href="#note-3">3</a></sup>
+
+<Note n={3}>Sur la page d'accueil, le même calcul tourne dans un shader, pour quelques milliers de points.</Note>
+
+<Quote>« À 1 700 points, <mark>l'œil complète</mark> le reste. »</Quote>
+
+## Pourquoi je le montre en classe
+
+[Paragraphe : ce que l'exercice enseigne à mes étudiants — trigonométrie, hasard contrôlé, projection — et comment je le découpe en séances.]

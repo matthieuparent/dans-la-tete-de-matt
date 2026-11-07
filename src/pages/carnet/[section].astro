@@ -1,0 +1,36 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import CarnetView from '../../components/CarnetView.astro';
+import { CARNET_SECTIONS, sectionById, plain, type CarnetSection } from '../../data/sections';
+import { getNotes, noteUrl } from '../../lib/carnet';
+import { breadcrumbs, graph, personId, website } from '../../lib/seo';
+
+export const getStaticPaths = (() => CARNET_SECTIONS.map((section) => ({ params: { section } }))) satisfies GetStaticPaths;
+
+const section = Astro.params.section as CarnetSection;
+const info = sectionById(section)!;
+const site = Astro.site ?? new URL(Astro.url.origin);
+const total = await getNotes();
+const notes = total.filter((n) => n.data.section === section);
+const label = plain(info.title);
+const description = `Notes « ${label} » du carnet de Matthieu Parent. ${info.text}`;
+const jsonLd = graph(
+  website(site),
+  {
+    '@type': 'CollectionPage',
+    url: new URL(`/carnet/${section}`, site).href,
+    name: `Carnet — ${label}`,
+    description,
+    inLanguage: 'fr-CA',
+    author: { '@id': personId(site) },
+    isPartOf: { '@id': new URL('/carnet#blog', site).href },
+    hasPart: notes.map((n) => ({ '@type': 'BlogPosting', headline: n.data.title, url: new URL(noteUrl(n), site).href })),
+  },
+  breadcrumbs(site, [['Accueil', '/'], ['Carnet', '/carnet'], [label, `/carnet/${section}`]]),
+);
+---
+
+<Base title={`Carnet — ${label}`} {description} mode="lire" {section} {jsonLd} noindex={notes.length === 0}>
+  <CarnetView {notes} {section} {total} />
+</Base>

@@ -1,0 +1,58 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '@fontsource-variable/archivo/wdth.css';
+import '@fontsource-variable/instrument-sans/index.css';
+import '../styles/global.css';
+import archivoLatin from '@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2?url';
+import instrumentLatin from '@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url';
+import Seo from '../components/Seo.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import MobileMenu from '../components/MobileMenu.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  mode: 'explorer' | 'lire';
+  /** Section pour le bouton opposé (Explorer → /#section, Lire → /carnet/section). */
+  section?: string;
+  type?: 'website' | 'article';
+  jsonLd?: string;
+  noindex?: boolean;
+  published?: Date;
+  modified?: Date;
+}
+
+const { title, description, mode, section, type, jsonLd, noindex, published, modified } = Astro.props;
+---
+
+<!doctype html>
+<html lang="fr-CA" class="no-js" data-mode={mode} transition:animate="none">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script is:inline>document.documentElement.classList.replace('no-js', 'js');</script>
+    <Seo {title} {description} {type} {jsonLd} {noindex} {published} {modified} />
+    <meta name="theme-color" content="#E9E5DA" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="preload" href={archivoLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={instrumentLatin} as="font" type="font/woff2" crossorigin />
+    <ClientRouter />
+  </head>
+  <body>
+    <a class="skip-link" href="#contenu">Aller au contenu</a>
+    <!-- Une seule matière pour tout le site : ce canvas persiste d'une page à l'autre. -->
+    <canvas class="dots-canvas" data-dots-canvas aria-hidden="true" transition:persist="dots"></canvas>
+    <Header {mode} {section} />
+    <slot />
+    <Footer />
+    <MobileMenu {mode} {section} />
+    <script>
+      import '../scripts/main.ts';
+    </script>
+  </body>
+</html>

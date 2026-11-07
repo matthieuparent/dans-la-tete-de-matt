@@ -1,0 +1,83 @@
+---
+import { CARNET_SECTIONS, sectionById, type CarnetSection } from '../data/sections';
+import { countBySection, formatDate, noteUrl, pluralNotes, readingMinutes, type Note } from '../lib/carnet';
+import Emblem from './Emblem.astro';
+
+interface Props {
+  notes: Note[];
+  /** Section filtrée, ou undefined pour « Tous les articles ». */
+  section?: CarnetSection | undefined;
+  total: Note[];
+}
+const { notes, section, total } = Astro.props;
+const counts = countBySection(total);
+const info = section ? sectionById(section) : undefined;
+const featured = section ? notes[0] : undefined;
+const others = section ? notes.slice(1) : notes;
+const chips = [
+  { href: '/carnet', label: 'Tous les articles', n: total.length, current: !section },
+  ...CARNET_SECTIONS.map((s) => ({ href: `/carnet/${s}`, label: sectionById(s)!.label, n: counts[s], current: s === section })),
+];
+---
+
+<main id="contenu" class="carnet" data-carnet>
+  <header class="carnet__band">
+    <h1 class="display display--xl" data-dots-line>Carnet de <mark>Matt</mark></h1>
+    <p class="lede">Making-of, notes de cours, parties, essais sur l'IA et vie de famille. Filtrez par section, ou lisez tout.</p>
+  </header>
+
+  <nav class="filters" data-filter-bar aria-label="Filtrer par section">
+    <ul role="list">
+      {chips.map((c) => (
+        <li>
+          <a href={c.href} aria-current={c.current ? 'page' : undefined}>
+            <span class="filters__label">{c.label}</span><sup>{c.n}</sup>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <div id="liste" class="carnet__body">
+    {section && (
+      <a class="carnet__hint" href="#contenu">↑ Remontez pour voir les autres sections et tous les articles</a>
+    )}
+    <aside class="carnet__chapter">
+      <p class="kicker"><span class="num">{info ? info.num : '∗'}</span>{info ? 'Section active' : 'Plus récentes d’abord'}</p>
+      <h2 class="display display--l" data-dots-line set:html={info ? info.title : 'Tout'} />
+      <p>{info ? `${pluralNotes(notes.length)} dans cette section.` : `${pluralNotes(total.length)}, toutes sections confondues`}</p>
+      {section && <Emblem section={section} size={96} />}
+      <a class="back-link sweep" href={section ? `/#${section}` : '/'}>← Revenir à l'exploration</a>
+    </aside>
+
+    <div class="notes">
+      {notes.length === 0 && (
+        <p class="notes__empty">Aucune note dans cette section pour l'instant. <a class="sweep" href="/carnet">Voir tous les articles</a></p>
+      )}
+      {featured && (
+        <article class="note note--featured">
+          <div class="note__media" aria-hidden="true"><span>[image ou vidéo de l'article]</span></div>
+          <p class="note__meta"><time datetime={featured.data.date.toISOString()}>{formatDate(featured.data.date)}</time><span>{readingMinutes(featured)} min</span></p>
+          <h3 class="note__title note__title--l"><a href={noteUrl(featured)} data-dots-line>{featured.data.title}</a></h3>
+          <p class="note__excerpt">{featured.data.description}</p>
+        </article>
+      )}
+      {others.length > 0 && (
+        <ol class="note-list" role="list">
+          {others.map((n) => (
+            <li>
+              <article class="note">
+                <p class="note__meta"><time datetime={n.data.date.toISOString()}>{formatDate(n.data.date)}</time><span>{readingMinutes(n)} min</span></p>
+                <div>
+                  <h3 class="note__title"><a class="sweep" href={noteUrl(n)} data-dots-line>{n.data.title}</a></h3>
+                  <p class="note__excerpt">{n.data.description}</p>
+                </div>
+                <p class="note__section"><Emblem section={n.data.section} />{sectionById(n.data.section)!.label}</p>
+              </article>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  </div>
+</main>

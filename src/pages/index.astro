@@ -1,0 +1,176 @@
+---
+import Base from '../layouts/Base.astro';
+import { PROFILE, SECTIONS, SHAPE_IDS, plain } from '../data/sections';
+import { PROJETS } from '../data/projets';
+import { STAGE_H, STAGE_W, buildShape } from '../scripts/dots/shapes';
+import { getNotes, noteUrl, formatDate } from '../lib/carnet';
+import { SITE_NAME, graph, person, website } from '../lib/seo';
+
+const site = Astro.site ?? new URL(Astro.url.origin);
+const [intro, ...rest] = SECTIONS;
+const shapes = SHAPE_IDS.map((id) => buildShape(id, 0.3));
+const latest = (await getNotes()).slice(0, 3);
+const description = `${PROFILE.name}, ${PROFILE.role.toLowerCase()}. ${PROFILE.tagline}`;
+
+const jsonLd = graph(website(site), person(site), {
+  '@type': 'ProfilePage',
+  '@id': new URL('/#profil', site).href,
+  url: new URL('/', site).href,
+  name: SITE_NAME,
+  inLanguage: 'fr-CA',
+  mainEntity: { '@id': new URL('/#matthieu', site).href },
+  hasPart: SECTIONS.filter((s) => s.id !== 'intro').map((s) => ({
+    '@type': 'WebPageElement',
+    name: plain(s.title),
+    url: new URL(`/#${s.id}`, site).href,
+    description: s.text,
+  })),
+});
+const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`;
+---
+
+<Base title={SITE_NAME} {description} mode="explorer" {jsonLd}>
+  <!-- explorer--stage-fade : essai mobile (fondu flou sous la forme). Retirer la classe pour revenir au filet. -->
+  <main id="contenu" class="explorer explorer--stage-fade" data-explorer>
+    <!-- Zone des points : fixe à l'écran (sticky) pendant que le texte défile. -->
+    <div class="explorer__stage-col">
+      <div class="explorer__sticky">
+        <div class="stage" data-stage role="img" aria-label={intro!.shapeLabel}>
+          <img
+            class="stage__poster"
+            data-poster
+            src="/formes/intro.svg"
+            width={STAGE_W}
+            height={STAGE_H}
+            alt=""
+            decoding="async"
+            fetchpriority="high"
+          />
+          <span class="stage__ring" data-nucleus-ring hidden></span>
+          {
+            shapes.map((s) => (
+              <div class="stage__labels" data-labels-for={s.id} hidden={s.id !== 'intro' || undefined} aria-hidden="true">
+                {s.leader && (
+                  <svg class="stage__leader" viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} preserveAspectRatio="none">
+                    <line x1={s.leader[0]} y1={s.leader[1]} x2={s.leader[2]} y2={s.leader[3]} />
+                  </svg>
+                )}
+                {s.labels.map((l) => (
+                  <span class:list={['stage__label', `is-${l.anchor}`]} style={`--x:${pct(l.x, STAGE_W)};--y:${pct(l.y, STAGE_H)}`}>
+                    {l.text}
+                  </span>
+                ))}
+              </div>
+            ))
+          }
+        </div>
+        <p class="stage__caption" aria-hidden="true">
+          <span class="stage__scroll">Faire défiler ↓</span>
+          <span class="stage__count"><b data-counter>00</b> / 06</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- 00 · Intro -->
+    <section id="intro" class="sec sec--intro" data-shape="intro" data-shape-label={intro!.shapeLabel} aria-labelledby="titre">
+      <div class="sec__first">
+        <dl class="facts facts--profile" aria-label="Profil">
+          {intro!.rows.map(([k, v]) => (<><dt>{k}</dt><dd>{v}</dd></>))}
+        </dl>
+        <div class="sec__hero">
+          <h1 id="titre" class="display display--xl">Dans la tête<br /> de <mark>Matt</mark></h1>
+          <p class="lede">{PROFILE.tagline}</p>
+        </div>
+      </div>
+      <img class="sec__figure" src="/formes/intro.svg" width={STAGE_W} height={STAGE_H} alt="" loading="lazy" decoding="async" />
+    </section>
+
+    {
+      rest.map((s) => (
+        <section id={s.id} class:list={['sec', `sec--${s.id}`]} data-shape={s.id} data-shape-label={s.shapeLabel} aria-labelledby={`h-${s.id}`}>
+          <div class="sec__body">
+            <p class="kicker"><span class="num">{s.num}</span></p>
+            <h2 id={`h-${s.id}`} class="display display--l" set:html={s.title} />
+            <p class="sec__text">{s.text}</p>
+            {s.rows.length > 0 && (
+              <dl class="facts">
+                {s.rows.map(([k, v]) => (<><dt>{k}</dt><dd>{v}</dd></>))}
+              </dl>
+            )}
+
+            {s.id === 'projets' && (
+              <details class="project-list">
+                <summary>Liste des {PROJETS.length} projets</summary>
+                <ol role="list">
+                  {PROJETS.map((p, i) => (
+                    <li>
+                      <button type="button" data-open-project={i}>
+                        <span class="project-list__year">{p.year}</span> {p.name}
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            )}
+
+            {s.id === 'carnet' ? (
+              <>
+                {latest.length > 0 && (
+                  <ol class="latest" role="list">
+                    {latest.map((n) => (
+                      <li>
+                        <span class="latest__date">{formatDate(n.data.date)}</span>
+                        <a class="sweep" href={noteUrl(n)}>{n.data.title}</a>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+                <a class="button" href="/carnet">Passer en mode Lire</a>
+              </>
+            ) : (
+              <>
+                {s.hint && (
+                  <p class="sec__hint">
+                    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9" cy="9" r="7" /><circle cx="9" cy="9" r="2" fill="currentColor" /></svg>
+                    <span>{s.hint}</span>
+                  </p>
+                )}
+                <p class="sec__more"><a class="sweep" href={`/carnet/${s.id}`}>Lire les notes « {s.label} »</a></p>
+              </>
+            )}
+          </div>
+          <img class="sec__figure" src={`/formes/${s.id}.svg`} width={STAGE_W} height={STAGE_H} alt="" loading="lazy" decoding="async" />
+        </section>
+      ))
+    }
+
+    <!-- Index des sections (bureau : colonne de droite ; mobile : barre fixe en bas). -->
+    <nav class="index" aria-label="Sections">
+      <ol role="list">
+        {SECTIONS.map((s, i) => (
+          <li>
+            <a href={`#${s.id}`} data-index-link aria-current={i === 0 ? 'true' : undefined}>
+              <span class="index__num">{s.num}</span>
+              <span class="index__label">{s.label}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  </main>
+
+  <!-- Fiche projet (survol / toucher d'un noyau, ou liste accessible). -->
+  <aside class="project-card" data-project-card hidden aria-live="polite" aria-label="Projet">
+    <div class="project-card__media"><span>[aperçu vidéo du projet]</span></div>
+    <div class="project-card__body">
+      <p class="project-card__meta" data-card-meta></p>
+      <h3 class="project-card__name" data-card-name></h3>
+      <p class="project-card__summary" data-card-summary></p>
+      <p class="project-card__meta" data-card-tech></p>
+      <div class="project-card__actions">
+        <a data-card-link href="#">Ouvrir le projet →</a>
+        <button type="button" data-card-close aria-label="Fermer la fiche">Fermer</button>
+      </div>
+    </div>
+  </aside>
+</Base>

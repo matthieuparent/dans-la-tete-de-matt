@@ -1,0 +1,36 @@
+---
+import { PROFILE } from '../data/sections';
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer" id="contact">
+  <div class="site-footer__brand">
+    <p class="logo-long"><mark>Matthieu</mark> Parent</p>
+    <p class="site-footer__tag">Dans la tête de <mark>Matt</mark> — {PROFILE.role.toLowerCase()}.</p>
+  </div>
+  <div class="site-footer__cols">
+    <section aria-labelledby="f-contact">
+      <h2 id="f-contact" class="eyebrow">Contact</h2>
+      <p>{PROFILE.status}</p>
+      <!-- TODO(Matthieu) : remplacer par un vrai lien mailto: -->
+      <p><a class="sweep" href="#contact">{PROFILE.email}</a></p>
+    </section>
+    <nav aria-labelledby="f-nav">
+      <h2 id="f-nav" class="eyebrow">Explorer</h2>
+      <ul role="list">
+        <li><a class="sweep" href="/#projets">Projets</a></li>
+        <li><a class="sweep" href="/#enseignement">Enseignement</a></li>
+        <li><a class="sweep" href="/#jeu">Jeu</a></li>
+        <li><a class="sweep" href="/#ia">IA</a></li>
+      </ul>
+    </nav>
+    <nav aria-labelledby="f-lire">
+      <h2 id="f-lire" class="eyebrow">Lire</h2>
+      <ul role="list">
+        <li><a class="sweep" href="/carnet">Tous les articles</a></li>
+        <li><a class="sweep" href="/rss.xml">Flux RSS</a></li>
+      </ul>
+    </nav>
+  </div>
+  <p class="site-footer__legal">© {year} Matthieu Parent</p>
+</footer>

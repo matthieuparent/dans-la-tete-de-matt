@@ -1,0 +1,82 @@
+---
+/**
+ * Démo interactive : le cerveau de la page d'accueil, réglable (nombre de points, rotation).
+ * Canvas 2D (pas besoin de three.js pour ≤ 3 000 points) ; même générateur que le site.
+ */
+import { STAGE_H, STAGE_W } from '../../scripts/dots/shapes';
+---
+
+<figure class="demo" data-brain-demo>
+  <div class="demo__frame">
+    <canvas class="demo__canvas" width="896" height="460" role="img" aria-label="Démo : le cerveau en points, avec le nombre de points et la rotation réglables"></canvas>
+    <img class="demo__fallback" src="/formes/intro.svg" width={STAGE_W} height={STAGE_H} alt="" loading="lazy" />
+    <span class="demo__tag">Démo interactive</span>
+  </div>
+  <div class="demo__controls">
+    <label>Points <input type="range" min="200" max="3000" step="100" value="1700" data-n /> <output data-n-out>1 700</output></label>
+    <label>Rotation <input type="range" min="-180" max="180" step="5" value="-35" data-rot /> <output data-rot-out>−35°</output></label>
+  </div>
+  <figcaption>Fig. 1 — Le même code que la page d'accueil. Faites varier le nombre de points : en dessous de 600, la forme disparaît.</figcaption>
+</figure>
+
+<script>
+  import { DEPTH_SCALE, buildShape, depthAlpha, depthSize, project, STRIDE } from '../../scripts/dots/shapes';
+
+  function mountDemo(fig: HTMLElement): void {
+    const canvas = fig.querySelector('canvas')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    fig.classList.add('is-live');
+    const nIn = fig.querySelector<HTMLInputElement>('[data-n]')!;
+    const rIn = fig.querySelector<HTMLInputElement>('[data-rot]')!;
+    const nOut = fig.querySelector('[data-n-out]')!;
+    const rOut = fig.querySelector('[data-rot-out]')!;
+    const fmt = new Intl.NumberFormat('fr-CA');
+    let cache: { n: number; pts: number[] } | null = null;
+
+    const draw = (): void => {
+      const n = Number(nIn.value);
+      const rot = (Number(rIn.value) * Math.PI) / 180;
+      nOut.textContent = fmt.format(n);
+      rOut.textContent = `${Number(rIn.value) < 0 ? '−' : ''}${Math.abs(Number(rIn.value))}°`;
+      if (!cache || cache.n !== n) {
+        const raw = buildShape('intro', n / 1700);
+        cache = { n, pts: raw.fill };
+      }
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      const k = (h / DEPTH_SCALE) * 0.78;
+      const proj: Array<[number, number, number, number]> = [];
+      for (let i = 0; i < cache.pts.length; i += STRIDE) {
+        const [x, y, z, dn] = project(cache.pts[i]!, cache.pts[i + 1]!, cache.pts[i + 2]!, 0.2, rot);
+        proj.push([x, y, z, dn]);
+      }
+      proj.sort((a, b) => a[2] - b[2]); // du plus loin au plus proche
+      ctx.fillStyle = '#E9E5DA';
+      for (const [x, y, , dn] of proj) {
+        ctx.globalAlpha = 0.6 * depthAlpha(dn);
+        ctx.beginPath();
+        ctx.arc(w / 2 + (x - 360) * k * 0.5, h / 2 + (y - 354) * k * 0.5, Math.max(0.5, 1.25 * depthSize(dn) * 0.9), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    };
+    let raf = 0;
+    const schedule = (): void => {
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; draw(); });
+    };
+    nIn.addEventListener('input', schedule);
+    rIn.addEventListener('input', schedule);
+    new ResizeObserver(schedule).observe(canvas);
+    draw();
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('[data-brain-demo]:not(.is-live)').forEach(mountDemo);
+  });
+</script>

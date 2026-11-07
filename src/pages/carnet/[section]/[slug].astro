@@ -1,0 +1,123 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import { sectionById } from '../../../data/sections';
+import { formatDate, getNotes, noteUrl, readingMinutes, type Note } from '../../../lib/carnet';
+import { breadcrumbs, graph, personId, website } from '../../../lib/seo';
+import Note_ from '../../../components/mdx/Note.astro';
+import Quote from '../../../components/mdx/Quote.astro';
+import BrainDemo from '../../../components/mdx/BrainDemo.astro';
+
+export const getStaticPaths = (async () => {
+  const notes = await getNotes();
+  return notes.map((note, i) => ({
+    params: { section: note.data.section, slug: note.id },
+    // Liste triée du plus récent au plus ancien : « précédente » = plus ancienne.
+    props: { note, prev: notes[i + 1], next: notes[i - 1] },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  note: Note;
+  prev?: Note | undefined;
+  next?: Note | undefined;
+}
+const { note, prev, next } = Astro.props;
+const { Content, headings } = await render(note);
+const toc = headings.filter((h) => h.depth === 2);
+const info = sectionById(note.data.section)!;
+const site = Astro.site ?? new URL(Astro.url.origin);
+const url = new URL(noteUrl(note), site).href;
+const minutes = readingMinutes(note);
+
+// Titre : la partie `highlight` est surlignée.
+const hl = note.data.highlight;
+const [before, after] = hl && note.data.title.includes(hl) ? note.data.title.split(hl) : [note.data.title, undefined];
+
+const jsonLd = graph(
+  website(site),
+  {
+    '@type': 'BlogPosting',
+    '@id': `${url}#article`,
+    headline: note.data.title,
+    description: note.data.description,
+    url,
+    mainEntityOfPage: url,
+    datePublished: note.data.date.toISOString(),
+    dateModified: (note.data.updated ?? note.data.date).toISOString(),
+    inLanguage: 'fr-CA',
+    author: { '@id': personId(site) },
+    publisher: { '@id': personId(site) },
+    articleSection: info.label,
+    timeRequired: `PT${minutes}M`,
+    isPartOf: { '@id': new URL('/carnet#blog', site).href },
+  },
+  breadcrumbs(site, [['Accueil', '/'], ['Carnet', '/carnet'], [info.label, `/carnet/${info.id}`], [note.data.title, noteUrl(note)]]),
+);
+---
+
+<Base
+  title={note.data.title}
+  description={note.data.description}
+  mode="lire"
+  section={info.id}
+  type="article"
+  {jsonLd}
+  published={note.data.date}
+  modified={note.data.updated}
+>
+  <main id="contenu" class="article" data-article>
+    <div class="progress" data-progress role="progressbar" aria-label="Progression de lecture" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+
+    <header class="article__head">
+      <a class="back-link sweep" href={`/carnet/${info.id}`}>← Carnet / {info.label}</a>
+      <div class="article__title-block">
+        <p class="article__meta">
+          <span class="num">{info.num} {info.label}</span>
+          <time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>
+          <span>{minutes} min de lecture</span>
+        </p>
+        <h1 class="display display--xl article__title" data-dots-line>
+          {before}{after !== undefined && <><mark>{hl}</mark>{after}</>}
+        </h1>
+        <p class="lede">{note.data.description}</p>
+        <p class="article__byline">Par <a href="/" rel="author">Matthieu Parent</a></p>
+      </div>
+    </header>
+
+    <div class="article__layout">
+      {toc.length > 1 && (
+        <nav class="toc" aria-label="Sommaire" data-toc>
+          <details open>
+            <summary>Sommaire</summary>
+            <ol role="list">
+              {toc.map((h, i) => (
+                <li><a href={`#${h.slug}`}><span>{String(i + 1).padStart(2, '0')}</span>{h.text}</a></li>
+              ))}
+            </ol>
+          </details>
+        </nav>
+      )}
+      <div class="prose" data-article-body>
+        <Content components={{ Note: Note_, Quote, BrainDemo }} />
+      </div>
+    </div>
+
+    <footer class="article__foot">
+      {note.data.related.length > 0 && (
+        <nav class="related" aria-label="Sections liées">
+          <span>Cette note relie aussi</span>
+          <ul role="list">
+            {note.data.related.map((s) => <li><a href={`/carnet/${s}`}>{sectionById(s)!.label}</a></li>)}
+          </ul>
+        </nav>
+      )}
+      <nav class="siblings" aria-label="Notes voisines">
+        {prev ? <a href={noteUrl(prev)} rel="prev"><span>← Note précédente</span><strong>{prev.data.title}</strong></a> : <span />}
+        {next && <a href={noteUrl(next)} rel="next" class="siblings__next"><span>Note suivante →</span><strong>{next.data.title}</strong></a>}
+      </nav>
+      <a class="button" href={`/#${info.id}`}>Revenir à l'exploration · {info.label} ↗</a>
+    </footer>
+  </main>
+</Base>

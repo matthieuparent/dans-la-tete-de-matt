@@ -1,0 +1,18 @@
+---
+/**
+ * Sélecteur Explorer / Lire. Ce sont des liens (navigation réelle, fonctionne sans JS) ;
+ * le routeur client les intercepte pour la bascule sans rechargement.
+ */
+interface Props {
+  mode: 'explorer' | 'lire';
+  section?: string | undefined;
+}
+const { mode, section } = Astro.props;
+const explorerHref = mode === 'lire' && section ? `/#${section}` : '/';
+const lireHref = section ? `/carnet/${section}` : '/carnet';
+---
+
+<div class="mode-switch" role="group" aria-label="Mode d'affichage">
+  <a href={explorerHref} aria-current={mode === 'explorer' ? 'page' : undefined} data-mode-explorer>Explorer</a>
+  <a href={lireHref} aria-current={mode === 'lire' ? 'page' : undefined} data-mode-lire>Lire</a>
+</div>

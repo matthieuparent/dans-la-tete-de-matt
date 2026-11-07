@@ -1,0 +1,15 @@
+---
+/**
+ * Note de marge. À placer juste après le paragraphe qu'elle commente :
+ *   <Note n={1}>Texte de la note.</Note>
+ * Bureau : flotte dans la colonne de droite. Mobile : sous son paragraphe.
+ */
+interface Props {
+  n: number;
+}
+const { n } = Astro.props;
+---
+
+<aside class="margin-note" id={`note-${n}`} aria-label={`Note ${n}`}>
+  <span class="margin-note__n" aria-hidden="true">{n}</span><slot />
+</aside>

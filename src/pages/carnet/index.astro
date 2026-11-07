@@ -1,0 +1,28 @@
+---
+import Base from '../../layouts/Base.astro';
+import CarnetView from '../../components/CarnetView.astro';
+import { getNotes, noteUrl } from '../../lib/carnet';
+import { breadcrumbs, graph, personId, website } from '../../lib/seo';
+
+const site = Astro.site ?? new URL(Astro.url.origin);
+const notes = await getNotes();
+const description = "Le carnet de Matthieu Parent : making-of de projets web 3D, notes de cours, jeux, essais sur l'IA en classe et vie de famille.";
+const jsonLd = graph(
+  website(site),
+  {
+    '@type': 'Blog',
+    '@id': new URL('/carnet#blog', site).href,
+    url: new URL('/carnet', site).href,
+    name: 'Carnet de Matt',
+    description,
+    inLanguage: 'fr-CA',
+    author: { '@id': personId(site) },
+    blogPost: notes.map((n) => ({ '@type': 'BlogPosting', headline: n.data.title, url: new URL(noteUrl(n), site).href, datePublished: n.data.date.toISOString() })),
+  },
+  breadcrumbs(site, [['Accueil', '/'], ['Carnet', '/carnet']]),
+);
+---
+
+<Base title="Carnet de Matt" {description} mode="lire" {jsonLd}>
+  <CarnetView {notes} total={notes} />
+</Base>

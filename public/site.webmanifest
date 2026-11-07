@@ -1,0 +1,13 @@
+{
+  "name": "Dans la tête de Matt",
+  "short_name": "Matt",
+  "lang": "fr-CA",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#E9E5DA",
+  "theme_color": "#E9E5DA",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

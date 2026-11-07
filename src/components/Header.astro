@@ -1,0 +1,38 @@
+---
+import { isCarnetSection } from '../data/sections';
+import ModeSwitch from './ModeSwitch.astro';
+
+interface Props {
+  mode: 'explorer' | 'lire';
+  section?: string | undefined;
+}
+const { mode, section } = Astro.props;
+const path = Astro.url.pathname;
+const nav = [
+  { href: '/#projets', label: 'Projets' },
+  { href: '/#enseignement', label: 'Enseignement' },
+  { href: '/carnet', label: 'Carnet', current: path.startsWith('/carnet') },
+  { href: '#contact', label: 'Contact' },
+];
+---
+
+<header class="site-header">
+  <a href="/" class="logo-box" aria-label="Matthieu Parent, accueil">
+    <span aria-hidden="true">MP</span>
+  </a>
+  <nav class="site-nav" aria-label="Principale">
+    <ul role="list">
+      {nav.map((n) => (
+        <li>
+          <a class="sweep" href={n.href} aria-current={n.current ? 'page' : undefined}>
+            {n.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+  <ModeSwitch {mode} section={section && isCarnetSection(section) ? section : undefined} />
+  <button class="menu-button" type="button" data-menu-open aria-haspopup="dialog" aria-expanded="false" aria-label="Ouvrir le menu">
+    <svg aria-hidden="true" width="20" height="14" viewBox="0 0 20 14" stroke="currentColor" stroke-width="2"><line x1="0" y1="3" x2="20" y2="3"></line><line x1="0" y1="11" x2="13" y2="11"></line></svg>
+  </button>
+</header>
