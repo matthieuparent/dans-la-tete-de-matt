@@ -914,6 +914,69 @@
     .siblings { grid-template-columns: 1fr; gap: 16px; }
     .siblings__next { text-align: left; }
   }
+
+  /* ---------- Statut dynamique « En train de… » (StatusLabel.astro / .ts) ---------- */
+  .stage__label.status { pointer-events: auto; white-space: nowrap; }
+  .status__trigger {
+    display: inline-block;
+    padding: 2px 0;
+    border: 0;
+    background: none;
+    text-align: inherit;
+    font: inherit;
+    /* Surligneur qui se balaie sous le texte au survol / focus (geste de la marque). */
+    background: linear-gradient(var(--hl), var(--hl)) 0 100% / 0% 0.42em no-repeat;
+    transition: background-size 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .status__visible { display: inline-grid; }
+  .status__text {
+    grid-area: 1 / 1;
+    transition: opacity 0.6s ease, translate 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease;
+  }
+  .status__text.is-entering { opacity: 0; translate: 0 0.5em; filter: blur(4px); }
+  .status__text.is-leaving { opacity: 0; translate: 0 -0.5em; filter: blur(4px); }
+  /* Texte de survol : hors flux (aucun saut de mise en page), sous le texte visible et de la
+     même largeur ; le retrait de 1em le garde à droite de la ligne de rappel. */
+  .status__hover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 1em;
+    right: 0;
+    white-space: normal;
+    text-wrap: pretty;
+    color: var(--muted);
+    line-height: 1.4;
+    opacity: 0;
+    translate: var(--tx, 0) -4px;
+    filter: blur(3px);
+    pointer-events: none;
+    transition: opacity 0.35s ease, translate 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+  }
+  .status:is(.is-open, :has(.status__trigger:focus-visible)) .status__trigger { background-size: 100% 0.42em; }
+  .status:is(.is-open, :has(.status__trigger:focus-visible)) .status__hover { opacity: 1; translate: var(--tx, 0) 0; filter: none; }
+  @media (hover: hover) {
+    .status:hover .status__trigger { background-size: 100% 0.42em; }
+    .status:hover .status__hover { opacity: 1; translate: var(--tx, 0) 0; filter: none; }
+  }
+  .status.is-dismissed .status__hover { opacity: 0 !important; }
+  .status__trigger:focus-visible { outline: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .status__trigger, .status__text, .status__hover { transition-duration: 0.01ms; }
+    .status__text.is-entering, .status__text.is-leaving { translate: none; filter: none; }
+    .status__hover { translate: var(--tx, 0) 0 !important; filter: none; }
+  }
+  /* Mobile : pas de ligne de rappel ; le statut devient une ligne courte, centrée en haut. */
+  @media (max-width: 899px) {
+    .stage__label.status {
+      display: block;
+      left: 50%;
+      top: 3%;
+      transform: translate(-50%, 0);
+      text-align: center;
+      font-size: 12px;
+    }
+    .status__hover { --tx: -50%; left: 50%; right: auto; width: max-content; max-width: min(32ch, 86cqw); text-align: center; }
+  }
 }
 
 /* ============================== states ============================== */

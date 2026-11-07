@@ -7,3 +7,6 @@ dist/
 !.env.example
 *.log
 .claude/settings.local.json
+
+# Override du statut (persisté côté serveur)
+.data/

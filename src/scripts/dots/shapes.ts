@@ -27,6 +27,8 @@ export interface ShapeLabel {
   readonly y: number;
   readonly text: string;
   readonly anchor: 'start' | 'middle';
+  /** Emplacement dynamique : le texte est remplacé au rendu (ex. statut « En train de… »). */
+  readonly slot?: 'status';
 }
 
 export interface Nucleus {
@@ -154,8 +156,8 @@ class ShapeBuilder {
     this.dot(cx, cy, R, 0.9, { acc: true, key: true, z: 0 });
   }
 
-  label(x: number, y: number, text: string, anchor: ShapeLabel['anchor'] = 'middle'): void {
-    this.labels.push({ x, y, text, anchor });
+  label(x: number, y: number, text: string, anchor: ShapeLabel['anchor'] = 'middle', slot?: ShapeLabel['slot']): void {
+    this.labels.push(slot ? { x, y, text, anchor, slot } : { x, y, text, anchor });
   }
 
   build(id: RawShape['id'], extra: Partial<Pick<RawShape, 'rot' | 'spin' | 'drift' | 'leader'>> = {}): RawShape {
@@ -225,7 +227,8 @@ function intro(d: number): RawShape {
     b.dot(PIVOT_X + x * DEPTH_SCALE, PIVOT_Y - 4 - y * DEPTH_SCALE, 1.25, 0.6, { z: z * DEPTH_SCALE });
   }
   b.halo(470, 230, 78);
-  b.label(556, 112, 'Prochaine pensée : Projets', 'start');
+  // Statut dynamique (voir src/config/status.ts) : texte remplacé au rendu de la page.
+  b.label(556, 112, 'statut', 'start', 'status');
   return b.build('intro', { rot: [0.22, -0.6], spin: 0.09, leader: [470, 230, 570, 122] });
 }
 

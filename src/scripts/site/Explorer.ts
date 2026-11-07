@@ -8,6 +8,7 @@ import { ScrollTimeline } from '../ScrollTimeline';
 import { clamp, prefersReducedMotion } from '../lib';
 import type { DotsDirector } from '../dots/DotsDirector';
 import { ProjectHover } from './ProjectHover';
+import { StatusLabel } from './StatusLabel';
 
 export class Explorer {
   readonly timeline: ScrollTimeline;
@@ -18,6 +19,7 @@ export class Explorer {
   private readonly labels: HTMLElement[];
   private readonly poster: HTMLImageElement | null;
   private readonly hover: ProjectHover;
+  private readonly status: StatusLabel | null;
   private smoothed = 0;
   private motion: { destroy(): void } | null = null;
   private destroyed = false;
@@ -29,6 +31,8 @@ export class Explorer {
     this.labels = Array.from(this.stage.querySelectorAll<HTMLElement>('[data-labels-for]'));
     this.poster = this.stage.querySelector<HTMLImageElement>('[data-poster]');
     this.hover = new ProjectHover(this.stage, () => this.smoothed);
+    const statusEl = this.stage.querySelector<HTMLElement>('[data-status]');
+    this.status = statusEl ? new StatusLabel(statusEl) : null;
 
     const sig = { signal: this.abort.signal };
     // Mise à jour immédiate (pas d'attente d'image) : l'index et le lien « Lire » doivent être
@@ -146,5 +150,6 @@ export class Explorer {
     cancelAnimationFrame(this.raf);
     this.abort.abort();
     this.hover.destroy();
+    this.status?.destroy();
   }
 }

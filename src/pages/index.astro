@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import StatusLabel from '../components/StatusLabel.astro';
 import { PROFILE, SECTIONS, SHAPE_IDS, plain } from '../data/sections';
 import { PROJETS } from '../data/projets';
 import { STAGE_H, STAGE_W, buildShape } from '../scripts/dots/shapes';
@@ -35,7 +36,7 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
     <!-- Zone des points : fixe à l'écran (sticky) pendant que le texte défile. -->
     <div class="explorer__stage-col">
       <div class="explorer__sticky">
-        <div class="stage" data-stage role="img" aria-label={intro!.shapeLabel}>
+        <div class="stage" data-stage role="group" aria-label={intro!.shapeLabel}>
           <img
             class="stage__poster"
             data-poster
@@ -49,17 +50,21 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
           <span class="stage__ring" data-nucleus-ring hidden></span>
           {
             shapes.map((s) => (
-              <div class="stage__labels" data-labels-for={s.id} hidden={s.id !== 'intro' || undefined} aria-hidden="true">
+              <div class="stage__labels" data-labels-for={s.id} hidden={s.id !== 'intro' || undefined}>
                 {s.leader && (
-                  <svg class="stage__leader" viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} preserveAspectRatio="none">
+                  <svg class="stage__leader" viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} preserveAspectRatio="none" aria-hidden="true">
                     <line x1={s.leader[0]} y1={s.leader[1]} x2={s.leader[2]} y2={s.leader[3]} />
                   </svg>
                 )}
-                {s.labels.map((l) => (
-                  <span class:list={['stage__label', `is-${l.anchor}`]} style={`--x:${pct(l.x, STAGE_W)};--y:${pct(l.y, STAGE_H)}`}>
-                    {l.text}
-                  </span>
-                ))}
+                {s.labels.map((l) =>
+                  l.slot === 'status' ? (
+                    <StatusLabel x={pct(l.x, STAGE_W)} y={pct(l.y, STAGE_H)} />
+                  ) : (
+                    <span class:list={['stage__label', `is-${l.anchor}`]} style={`--x:${pct(l.x, STAGE_W)};--y:${pct(l.y, STAGE_H)}`} aria-hidden="true">
+                      {l.text}
+                    </span>
+                  ),
+                )}
               </div>
             ))
           }
