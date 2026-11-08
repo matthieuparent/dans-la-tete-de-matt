@@ -1,19 +1,18 @@
 ---
 import { CARNET_SECTIONS, sectionById, type CarnetSection } from '../data/sections';
-import { countBySection, formatDate, noteUrl, pluralNotes, readingMinutes, type Note } from '../lib/carnet';
+import { countItems, countLabel, type CarnetItem } from '../lib/carnet';
 import Emblem from './Emblem.astro';
 
 interface Props {
-  notes: Note[];
+  /** Éléments affichés : notes et projets (études de cas). */
+  items: CarnetItem[];
   /** Section filtrée, ou undefined pour « Tous les articles ». */
   section?: CarnetSection | undefined;
-  total: Note[];
+  total: CarnetItem[];
 }
-const { notes, section, total } = Astro.props;
-const counts = countBySection(total);
+const { items, section, total } = Astro.props;
+const counts = countItems(total);
 const info = section ? sectionById(section) : undefined;
-const featured = section ? notes[0] : undefined;
-const others = section ? notes.slice(1) : notes;
 const chips = [
   { href: '/carnet', label: 'Tous les articles', n: total.length, current: !section },
   ...CARNET_SECTIONS.map((s) => ({ href: `/carnet/${s}`, label: sectionById(s)!.label, n: counts[s], current: s === section })),
@@ -22,7 +21,7 @@ const chips = [
 
 <main id="contenu" class="carnet" data-carnet>
   <header class="carnet__band">
-    <h1 class="display display--xl" data-dots-line>Carnet de <mark>Matt</mark></h1>
+    <h1 class="display display--xl">Carnet de <mark>Matt</mark></h1>
     <p class="lede">Making-of, notes de cours, parties, essais sur l'IA et vie de famille. Filtrez par section, ou lisez tout.</p>
   </header>
 
@@ -39,40 +38,46 @@ const chips = [
   </nav>
 
   <div id="liste" class="carnet__body">
-    {section && (
-      <a class="carnet__hint" href="#contenu">↑ Remontez pour voir les autres sections et tous les articles</a>
-    )}
     <aside class="carnet__chapter">
       <p class="kicker"><span class="num">{info ? info.num : '∗'}</span>{info ? 'Section active' : 'Plus récentes d’abord'}</p>
-      <h2 class="display display--l" data-dots-line set:html={info ? info.title : 'Tout'} />
-      <p>{info ? `${pluralNotes(notes.length)} dans cette section.` : `${pluralNotes(total.length)}, toutes sections confondues`}</p>
-      {section && <Emblem section={section} size={96} />}
+      <h2 class="display display--l" set:html={info ? info.title : 'Tout'} />
+      <p class="carnet__count">
+        {section && <Emblem section={section} size={40} />}
+        {info ? `${countLabel(items)} dans cette section.` : `${countLabel(total)}, toutes sections confondues`}
+      </p>
       <a class="back-link sweep" href={section ? `/#${section}` : '/'}>← Revenir à l'exploration</a>
     </aside>
 
-    <div class="notes">
-      {notes.length === 0 && (
+    <div class="notes" data-notes data-view="list">
+      <div class="notes__tools" role="group" aria-label="Affichage des notes">
+        <button type="button" data-view-btn="list" aria-pressed="true" aria-label="Afficher en liste" title="Liste">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 5h16M2 10h16M2 15h16" /></svg>
+        </button>
+        <button type="button" data-view-btn="cards" aria-pressed="false" aria-label="Afficher en cartes" title="Cartes">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="7" height="7" /><rect x="11" y="2" width="7" height="7" /><rect x="2" y="11" width="7" height="7" /><rect x="11" y="11" width="7" height="7" /></svg>
+        </button>
+      </div>
+      <!-- Applique le mode mémorisé avant l'affichage (pas de saut visuel). -->
+      <script is:inline data-astro-rerun>
+        try { var v = localStorage.getItem('carnet-view'); if (v === 'cards') { var n = document.currentScript.parentElement; n.dataset.view = 'cards'; n.querySelectorAll('[data-view-btn]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.viewBtn === 'cards')); }); } } catch (e) {}
+      </script>
+      {items.length === 0 && (
         <p class="notes__empty">Aucune note dans cette section pour l'instant. <a class="sweep" href="/carnet">Voir tous les articles</a></p>
       )}
-      {featured && (
-        <article class="note note--featured">
-          <div class="note__media" aria-hidden="true"><span>[image ou vidéo de l'article]</span></div>
-          <p class="note__meta"><time datetime={featured.data.date.toISOString()}>{formatDate(featured.data.date)}</time><span>{readingMinutes(featured)} min</span></p>
-          <h3 class="note__title note__title--l"><a href={noteUrl(featured)} data-dots-line>{featured.data.title}</a></h3>
-          <p class="note__excerpt">{featured.data.description}</p>
-        </article>
-      )}
-      {others.length > 0 && (
+      {items.length > 0 && (
         <ol class="note-list" role="list">
-          {others.map((n) => (
+          {items.map((n) => (
             <li>
-              <article class="note">
-                <p class="note__meta"><time datetime={n.data.date.toISOString()}>{formatDate(n.data.date)}</time><span>{readingMinutes(n)} min</span></p>
-                <div>
-                  <h3 class="note__title"><a class="sweep" href={noteUrl(n)} data-dots-line>{n.data.title}</a></h3>
-                  <p class="note__excerpt">{n.data.description}</p>
+              <article class:list={['note', `note--${n.kind}`]}>
+                <div class="note__media" aria-hidden="true">
+                  {n.thumb ? <img src={n.thumb} alt="" width="640" height="400" loading="lazy" decoding="async" /> : <span>[image ou vidéo]</span>}
                 </div>
-                <p class="note__section"><Emblem section={n.data.section} />{sectionById(n.data.section)!.label}</p>
+                <p class="note__meta">{n.kind === 'note' ? <time datetime={n.date.toISOString()}>{n.dateLabel}</time> : <span>{n.dateLabel}</span>}<span>{n.kicker}</span></p>
+                <div class="note__text">
+                  <h3 class="note__title"><a class="sweep" href={n.url}>{n.title}</a></h3>
+                  <p class="note__excerpt">{n.description}</p>
+                </div>
+                <p class="note__section"><Emblem section={n.section} />{sectionById(n.section)!.label}</p>
               </article>
             </li>
           ))}

@@ -23,6 +23,22 @@ export class CarnetPage {
         });
       }, { passive: true, ...sig });
     }
+    // Liste / cartes : mémorisé pour les prochaines visites.
+    const notes = root.querySelector<HTMLElement>('[data-notes]');
+    root.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        if (!notes) return;
+        const view = btn.dataset.viewBtn ?? 'list';
+        notes.dataset.view = view;
+        root.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        try {
+          localStorage.setItem('carnet-view', view);
+        } catch {
+          /* stockage indisponible : le choix vaut pour cette page seulement */
+        }
+      }, sig),
+    );
+
     // Filtre actif : on garde la puce visible dans la barre qui défile à l'horizontale (mobile).
     root.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'instant' });
   }

@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import StatusLabel from '../components/StatusLabel.astro';
 import { PROFILE, SECTIONS, SHAPE_IDS, plain } from '../data/sections';
 import { PROJETS } from '../data/projets';
 import { STAGE_H, STAGE_W, buildShape } from '../scripts/dots/shapes';
@@ -35,7 +36,7 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
     <!-- Zone des points : fixe à l'écran (sticky) pendant que le texte défile. -->
     <div class="explorer__stage-col">
       <div class="explorer__sticky">
-        <div class="stage" data-stage role="img" aria-label={intro!.shapeLabel}>
+        <div class="stage" data-stage role="group" aria-label={intro!.shapeLabel}>
           <img
             class="stage__poster"
             data-poster
@@ -49,25 +50,25 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
           <span class="stage__ring" data-nucleus-ring hidden></span>
           {
             shapes.map((s) => (
-              <div class="stage__labels" data-labels-for={s.id} hidden={s.id !== 'intro' || undefined} aria-hidden="true">
+              <div class="stage__labels" data-labels-for={s.id} hidden={s.id !== 'intro' || undefined}>
                 {s.leader && (
-                  <svg class="stage__leader" viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} preserveAspectRatio="none">
+                  <svg class="stage__leader" viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} preserveAspectRatio="none" aria-hidden="true">
                     <line x1={s.leader[0]} y1={s.leader[1]} x2={s.leader[2]} y2={s.leader[3]} />
                   </svg>
                 )}
-                {s.labels.map((l) => (
-                  <span class:list={['stage__label', `is-${l.anchor}`]} style={`--x:${pct(l.x, STAGE_W)};--y:${pct(l.y, STAGE_H)}`}>
-                    {l.text}
-                  </span>
-                ))}
+                {s.labels.map((l) =>
+                  l.slot === 'status' ? (
+                    <StatusLabel x={pct(l.x, STAGE_W)} y={pct(l.y, STAGE_H)} />
+                  ) : (
+                    <span class:list={['stage__label', `is-${l.anchor}`]} style={`--x:${pct(l.x, STAGE_W)};--y:${pct(l.y, STAGE_H)}`} aria-hidden="true">
+                      {l.text}
+                    </span>
+                  ),
+                )}
               </div>
             ))
           }
         </div>
-        <p class="stage__caption" aria-hidden="true">
-          <span class="stage__scroll">Faire défiler ↓</span>
-          <span class="stage__count"><b data-counter>00</b> / 06</span>
-        </p>
       </div>
     </div>
 
@@ -75,7 +76,7 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
     <section id="intro" class="sec sec--intro" data-shape="intro" data-shape-label={intro!.shapeLabel} aria-labelledby="titre">
       <div class="sec__first">
         <dl class="facts facts--profile" aria-label="Profil">
-          {intro!.rows.map(([k, v]) => (<><dt>{k}</dt><dd>{v}</dd></>))}
+          {intro!.rows.map(([k, v]) => (<><dt>{k}</dt><dd>{Array.isArray(v) ? <ul class="facts__list" role="list">{v.map((x) => <li>{x}</li>)}</ul> : v}</dd></>))}
         </dl>
         <div class="sec__hero">
           <h1 id="titre" class="display display--xl">Dans la tête<br /> de <mark>Matt</mark></h1>
@@ -94,7 +95,7 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
             <p class="sec__text">{s.text}</p>
             {s.rows.length > 0 && (
               <dl class="facts">
-                {s.rows.map(([k, v]) => (<><dt>{k}</dt><dd>{v}</dd></>))}
+                {s.rows.map(([k, v]) => (<><dt>{k}</dt><dd>{Array.isArray(v) ? <ul class="facts__list" role="list">{v.map((x) => <li>{x}</li>)}</ul> : v}</dd></>))}
               </dl>
             )}
 
@@ -161,14 +162,17 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
 
   <!-- Fiche projet (survol / toucher d'un noyau, ou liste accessible). -->
   <aside class="project-card" data-project-card hidden aria-live="polite" aria-label="Projet">
-    <div class="project-card__media"><span>[aperçu vidéo du projet]</span></div>
+    <div class="project-card__media">
+      <img data-card-thumb alt="" width="600" height="315" decoding="async" hidden />
+      <span data-card-placeholder>[aperçu du projet]</span>
+    </div>
     <div class="project-card__body">
       <p class="project-card__meta" data-card-meta></p>
       <h3 class="project-card__name" data-card-name></h3>
       <p class="project-card__summary" data-card-summary></p>
       <p class="project-card__meta" data-card-tech></p>
       <div class="project-card__actions">
-        <a data-card-link href="#">Ouvrir le projet →</a>
+        <a data-card-link href="#">Ouvrir le projet <span class="project-card__arrow" aria-hidden="true">→</span></a>
         <button type="button" data-card-close aria-label="Fermer la fiche">Fermer</button>
       </div>
     </div>

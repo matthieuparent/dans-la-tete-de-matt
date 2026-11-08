@@ -1,0 +1,29 @@
+---
+/**
+ * Statut dynamique « En train de… » (étiquette de la forme intro).
+ * Rendu statique avec les textes du statut Défaut (chargement, erreur, sans JS) ;
+ * StatusLabel.ts interroge ensuite /api/status et fait les transitions.
+ */
+import { STATUS_CONFIG } from '../config/status';
+
+interface Props {
+  x: string;
+  y: string;
+}
+const { x, y } = Astro.props;
+const d = STATUS_CONFIG.texts.defaut;
+const hover = d.hover[0] ?? '';
+---
+
+<span
+  class="stage__label is-start status"
+  style={`--x:${x};--y:${y}`}
+  data-status
+  data-default-visible={d.visible}
+  data-default-hover={hover}
+>
+  <button type="button" class="status__trigger" aria-describedby="status-hover" data-status-trigger>
+    <span class="status__visible" data-status-visible><span class="status__text">{d.visible}</span></span>
+  </button>
+  <span id="status-hover" class="status__hover" role="tooltip" data-status-hover>{hover}</span>
+</span>

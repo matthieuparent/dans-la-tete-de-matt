@@ -1,0 +1,20 @@
+---
+/**
+ * Planche de photos (3 colonnes au bureau, 2 sur mobile), recadrées en 3:2.
+ *   <Gallery caption="…" items={[{ src: '…', alt: '…' }, …]} />
+ */
+interface Props {
+  items: ReadonlyArray<{ src: string; alt: string }>;
+  caption?: string;
+}
+const { items, caption } = Astro.props;
+---
+
+<figure class="photo photo--wide gallery">
+  <ul role="list">
+    {items.map((it) => (
+      <li><img src={it.src} alt={it.alt} width="800" height="533" loading="lazy" decoding="async" /></li>
+    ))}
+  </ul>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>

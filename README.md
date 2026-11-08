@@ -7,7 +7,11 @@ npm install
 npm run dev      # http://localhost:4321
 npm run build    # site statique dans dist/ (SITE_URL=https://… npm run build)
 npm run check    # types + diagnostics Astro
+npm test         # tests unitaires (Vitest)
+npm start        # serveur de production (après build) : pages statiques + /api/status
 ```
+
+Statut dynamique « En train de… » (calendriers Outlook, GitHub, PSN, override) : [docs/statut-dynamique.md](docs/statut-dynamique.md). Secrets : copier `.env.example` en `.env`.
 
 ## Arborescence
 

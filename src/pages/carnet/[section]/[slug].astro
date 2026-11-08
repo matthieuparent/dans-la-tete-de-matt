@@ -8,6 +8,8 @@ import { breadcrumbs, graph, personId, website } from '../../../lib/seo';
 import Note_ from '../../../components/mdx/Note.astro';
 import Quote from '../../../components/mdx/Quote.astro';
 import BrainDemo from '../../../components/mdx/BrainDemo.astro';
+import Photo from '../../../components/mdx/Photo.astro';
+import Gallery from '../../../components/mdx/Gallery.astro';
 
 export const getStaticPaths = (async () => {
   const notes = await getNotes();
@@ -41,6 +43,7 @@ const jsonLd = graph(
     '@type': 'BlogPosting',
     '@id': `${url}#article`,
     headline: note.data.title,
+    ...(note.data.image ? { image: new URL(note.data.image, site).href } : {}),
     description: note.data.description,
     url,
     mainEntityOfPage: url,
@@ -66,6 +69,7 @@ const jsonLd = graph(
   {jsonLd}
   published={note.data.date}
   modified={note.data.updated}
+  image={note.data.image}
 >
   <main id="contenu" class="article" data-article>
     <div class="progress" data-progress role="progressbar" aria-label="Progression de lecture" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
@@ -100,7 +104,7 @@ const jsonLd = graph(
         </nav>
       )}
       <div class="prose" data-article-body>
-        <Content components={{ Note: Note_, Quote, BrainDemo }} />
+        <Content components={{ Note: Note_, Quote, BrainDemo, Photo, Gallery }} />
       </div>
     </div>
 

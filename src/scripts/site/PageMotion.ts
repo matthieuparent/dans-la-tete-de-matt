@@ -11,6 +11,24 @@ import { splitChars } from './split';
 const done = (tl: gsap.core.Timeline): Promise<void> =>
   Promise.race([new Promise<void>((resolve) => void tl.eventCallback('onComplete', () => resolve())), wait(tl.duration() * 1000 + 400)]);
 
+/**
+ * Ce qui change d'un filtre à l'autre : le chapitre et la barre d'outils.
+ * Les notes elles-mêmes arrivent avec ScrollReveal (à l'écran tout de suite, plus bas au défilement).
+ */
+const listBlocks = (root: HTMLElement): HTMLElement[] => [
+  ...Array.from(root.querySelectorAll<HTMLElement>('.carnet__chapter > :not(h2)')),
+  ...Array.from(root.querySelectorAll<HTMLElement>('.notes__tools')),
+];
+
+/** À la sortie, on emporte aussi le contenu visible (le reste est hors écran). */
+const onScreen = (els: HTMLElement[]): HTMLElement[] =>
+  els.filter((el) => {
+    const r = el.getBoundingClientRect();
+    return r.top < window.innerHeight && r.bottom > 0;
+  });
+const visibleContent = (root: HTMLElement): HTMLElement[] =>
+  onScreen(Array.from(root.querySelectorAll<HTMLElement>('.note-list > li, .notes__empty, .case__cover, .case__facts, .article__layout, .article__foot')));
+
 interface Targets {
   title: HTMLElement | null;
   bar: HTMLElement[];
@@ -23,13 +41,14 @@ function targets(root: HTMLElement): Targets {
     return {
       title: root.querySelector('.carnet__band h1'),
       bar: q('.filters li'),
-      blocks: [...q('.carnet__band .lede'), ...q('.carnet__hint'), ...q('.carnet__chapter > *'), ...q('.notes__empty, .note--featured, .note-list > li')],
+      blocks: [...q('.carnet__band .lede'), ...listBlocks(root)],
     };
   }
   return {
     title: root.querySelector('.article__title'),
     bar: [],
-    blocks: [...q('.article__head .back-link'), ...q('.article__meta, .article__title-block .lede, .article__byline'), ...q('.article__layout, .article__foot')],
+    // Le corps de l'article (couverture, fiche, texte, pied) arrive avec ScrollReveal.
+    blocks: [...q('.article__head .back-link'), ...q('.article__meta, .article__title-block .lede, .article__byline'), ...q('.toc')],
   };
 }
 
@@ -60,8 +79,34 @@ export function exitPage(root: HTMLElement): Promise<void> {
     return Promise.resolve();
   }
   const t = targets(root);
-  const all = [...(t.title ? [t.title] : []), ...t.bar, ...t.blocks];
+  const all = [...(t.title ? [t.title] : []), ...t.bar, ...t.blocks.filter((b) => !b.matches('.toc')), ...visibleContent(root)];
   const tl = gsap.timeline();
   tl.to(all, { autoAlpha: 0, y: -40, filter: 'blur(10px)', duration: 0.45, ease: 'power2.in', stagger: 0.025 });
+  return done(tl);
+}
+
+/* ---------------- Changement de filtre dans le Carnet (même arrivée, en plus court) ---------------- */
+
+export function prepareList(root: HTMLElement): void {
+  if (prefersReducedMotion()) return;
+  const title = root.querySelector<HTMLElement>('.carnet__chapter h2');
+  gsap.set(title ? splitChars(title) : [], { yPercent: 115, rotate: 8 });
+  gsap.set(listBlocks(root), { autoAlpha: 0, y: 50, filter: 'blur(10px)' });
+}
+
+export function enterList(root: HTMLElement): Promise<void> {
+  if (prefersReducedMotion()) return Promise.resolve();
+  const title = root.querySelector<HTMLElement>('.carnet__chapter h2');
+  const tl = gsap.timeline();
+  tl.to(title ? splitChars(title) : [], { yPercent: 0, rotate: 0, duration: 1, ease: 'expo.out', stagger: 0.035 }, 0);
+  tl.to(listBlocks(root), { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.95, ease: 'expo.out', stagger: 0.06, clearProps: 'filter,transform' }, 0.1);
+  return done(tl);
+}
+
+export function exitList(root: HTMLElement): Promise<void> {
+  if (prefersReducedMotion()) return Promise.resolve();
+  const title = root.querySelector<HTMLElement>('.carnet__chapter h2');
+  const tl = gsap.timeline();
+  tl.to([...(title ? [title] : []), ...listBlocks(root), ...visibleContent(root)], { autoAlpha: 0, y: -30, filter: 'blur(8px)', duration: 0.32, ease: 'power2.in', stagger: 0.02 });
   return done(tl);
 }

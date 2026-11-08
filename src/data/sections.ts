@@ -17,7 +17,8 @@ export interface SectionInfo {
   /** Titre condensé (capitales via CSS). `&shy;` autorisé. */
   readonly title: string;
   readonly text: string;
-  readonly rows: ReadonlyArray<readonly [string, string]>;
+  /** Valeur simple, ou liste (affichée une par ligne). */
+  readonly rows: ReadonlyArray<readonly [string, string | readonly string[]]>;
   readonly hint: string;
   /** Description courte de la forme, pour les lecteurs d'écran. */
   readonly shapeLabel: string;
@@ -26,11 +27,12 @@ export interface SectionInfo {
 export const PROFILE = {
   name: 'Matthieu Parent',
   role: 'Professeur, développeur créatif',
-  disciplines: 'Penseur créatif · Bâtisseur d’avenir avec mes étudiants · Homme de famille',
+  disciplines: ['Curieux et créatif', 'Expérience utilisateur', 'Débrouillardise'],
   city: 'Longueuil, QC, Canada',
-  status: '[Ouvert aux collaborations]',
+  status: 'Ouvert aux collaborations',
   tagline: "Je construis des expériences web et j'enseigne à les construire. Ce qui se passe entre les deux est ici.",
-  email: '[courriel]',
+  // Courriel découpé : il n'apparaît jamais en clair dans le HTML (voir Footer.astro).
+  email: { user: 'matthieuparent', domain: 'outlook.com' },
   sameAs: [] as string[], // TODO(Matthieu) : GitHub, LinkedIn, etc. (utilisé dans le JSON-LD)
 } as const;
 

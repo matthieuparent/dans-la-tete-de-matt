@@ -10,9 +10,25 @@ interface Props {
 const { mode, section } = Astro.props;
 const explorerHref = mode === 'lire' && section ? `/#${section}` : '/';
 const lireHref = section ? `/carnet/${section}` : '/carnet';
+// Explorer = un nuage de points (la matière du site) ; Lire = des lignes de texte.
+const ring = Array.from({ length: 8 }, (_, i) => {
+  const a = (i / 8) * Math.PI * 2;
+  return [10 + Math.cos(a) * 7, 10 + Math.sin(a) * 6] as const;
+});
 ---
 
 <div class="mode-switch" role="group" aria-label="Mode d'affichage">
-  <a href={explorerHref} aria-current={mode === 'explorer' ? 'page' : undefined} data-mode-explorer>Explorer</a>
-  <a href={lireHref} aria-current={mode === 'lire' ? 'page' : undefined} data-mode-lire>Lire</a>
+  <a href={explorerHref} aria-current={mode === 'explorer' ? 'page' : undefined} data-mode-explorer title="Explorer">
+    <svg aria-hidden="true" width="22" height="20" viewBox="0 0 20 20" fill="currentColor">
+      {ring.map(([x, y]) => <circle cx={x.toFixed(2)} cy={y.toFixed(2)} r="1.25" />)}
+      <circle cx="8" cy="9" r="1.7" /><circle cx="12.4" cy="10.6" r="1.25" /><circle cx="10.6" cy="6.8" r="1" />
+    </svg>
+    <span class="sr-only">Explorer</span>
+  </a>
+  <a href={lireHref} aria-current={mode === 'lire' ? 'page' : undefined} data-mode-lire title="Lire">
+    <svg aria-hidden="true" width="22" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="square">
+      <path d="M3 5h14M3 10h14M3 15h9" />
+    </svg>
+    <span class="sr-only">Lire</span>
+  </a>
 </div>

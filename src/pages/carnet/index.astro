@@ -1,11 +1,12 @@
 ---
 import Base from '../../layouts/Base.astro';
 import CarnetView from '../../components/CarnetView.astro';
-import { getNotes, noteUrl } from '../../lib/carnet';
+import { getCarnetItems, getNotes, noteUrl } from '../../lib/carnet';
 import { breadcrumbs, graph, personId, website } from '../../lib/seo';
 
 const site = Astro.site ?? new URL(Astro.url.origin);
 const notes = await getNotes();
+const items = await getCarnetItems();
 const description = "Le carnet de Matthieu Parent : making-of de projets web 3D, notes de cours, jeux, essais sur l'IA en classe et vie de famille.";
 const jsonLd = graph(
   website(site),
@@ -24,5 +25,5 @@ const jsonLd = graph(
 ---
 
 <Base title="Carnet de Matt" {description} mode="lire" {jsonLd}>
-  <CarnetView {notes} total={notes} />
+  <CarnetView {items} total={items} />
 </Base>
