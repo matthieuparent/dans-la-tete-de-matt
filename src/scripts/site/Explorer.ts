@@ -110,8 +110,6 @@ export class Explorer {
     // « Lire » ouvre le Carnet filtré sur la section en cours.
     const lire = isCarnetSection(id) ? `/carnet/${id}` : '/carnet';
     document.querySelectorAll<HTMLAnchorElement>('[data-mode-lire]').forEach((a) => (a.href = lire));
-    const counter = this.root.querySelector('[data-counter]');
-    if (counter) counter.textContent = `0${i}`;
     const src = this.root.querySelector<HTMLElement>(`[data-shape="${id}"]`);
     this.stage.setAttribute('aria-label', src?.dataset.shapeLabel ?? '');
 

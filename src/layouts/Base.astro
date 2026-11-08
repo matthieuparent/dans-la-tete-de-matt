@@ -21,9 +21,11 @@ interface Props {
   noindex?: boolean;
   published?: Date;
   modified?: Date;
+  /** Image de partage (Open Graph), chemin absolu depuis la racine. */
+  image?: string;
 }
 
-const { title, description, mode, section, type, jsonLd, noindex, published, modified } = Astro.props;
+const { title, description, mode, section, type, jsonLd, noindex, published, modified, image } = Astro.props;
 ---
 
 <!doctype html>
@@ -32,7 +34,7 @@ const { title, description, mode, section, type, jsonLd, noindex, published, mod
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <script is:inline>document.documentElement.classList.replace('no-js', 'js');</script>
-    <Seo {title} {description} {type} {jsonLd} {noindex} {published} {modified} />
+    <Seo {title} {description} {type} {jsonLd} {noindex} {published} {modified} {image} />
     <meta name="theme-color" content="#E9E5DA" />
     <meta name="color-scheme" content="light" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

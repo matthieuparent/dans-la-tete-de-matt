@@ -3,7 +3,8 @@
  * L'ordre du tableau = l'ordre chronologique (position sur la ligne de temps).
  * Tous les noyaux ont la même taille.
  *
- * TODO(Matthieu) : remplacer les 16 entrées par les vrais projets.
+ * TODO(Matthieu) : remplacer les entrées génériques par les vrais projets.
+ * Ce fichier est aussi chargé côté client (noyaux, fiche) : garder le texte long dans etudes.ts.
  */
 export interface Projet {
   readonly id: string;
@@ -12,12 +13,54 @@ export interface Projet {
   readonly type: string;
   readonly tech: string;
   readonly summary: string;
+  /** Page interne (étude de cas) ou lien externe. */
   readonly url: string;
+  /** Site en ligne. */
+  readonly live?: string;
+  /** Vignette de la fiche (ratio ~1,9:1). */
+  readonly thumb?: string;
   /** Projet mis en avant (halo surligneur permanent). */
   readonly featured?: boolean;
 }
 
-export const PROJETS: readonly Projet[] = Array.from({ length: 16 }, (_, i) => ({
+const INSPIRER_RESPIRER: Projet = {
+  id: 'inspirer-respirer',
+  name: 'Inspirer. Respirer.',
+  year: '2021',
+  type: 'Site WordPress sur mesure',
+  tech: 'WordPress · page builder maison · webpack · JS orienté objet · SCSS',
+  summary: "Le site d'attractivité de la MRC d'Argenteuil : un page builder de quinze blocs avec un système de couleurs par section, un babillard d'emplois filtrable et des vidéos chargées à la demande.",
+  url: '/projets/inspirer-respirer',
+  live: 'https://inspirer-respirer.com/',
+  thumb: '/projets/inspirer-respirer/vignette-carte-16x10.webp',
+};
+
+const SYNERLAB: Projet = {
+  id: 'synerlab',
+  name: 'Synerlab',
+  year: '2023',
+  type: 'Site WordPress sur mesure',
+  tech: 'WordPress · page builder maison · webpack · JS orienté objet · SCSS',
+  summary: "Le site WordPress du centre d'innovation en économie circulaire de la MRC d'Argenteuil : un page builder maison de dix blocs et un front-end webpack orienté objet.",
+  url: '/projets/synerlab',
+  live: 'https://synerlab.ca/',
+  thumb: '/projets/synerlab/vignette-carte-16x10.webp',
+  featured: true,
+};
+
+const MOTS_DE_TETE: Projet = {
+  id: 'mots-de-tete',
+  name: 'Mots de tête',
+  year: '2024',
+  type: 'Lexique bilingue WordPress',
+  tech: 'WordPress · fiches structurées · recherche bilingue · webpack · JS orienté objet',
+  summary: "Un vocabulaire de quelque 600 termes en santé dentaire et en optique, avec un index alphabétique, une recherche français-anglais et des fiches validées par une terminologue agréée.",
+  url: '/projets/mots-de-tete',
+  live: 'https://www.motsdetete.ca/',
+  thumb: '/projets/mots-de-tete/vignette-carte-16x10.webp',
+};
+
+const GENERIQUES: Projet[] = Array.from({ length: 14 }, (_, i) => ({
   id: `projet-${String(i + 1).padStart(2, '0')}`,
   name: `[Nom du projet ${i + 1}]`,
   year: '[AAAA]',
@@ -25,5 +68,7 @@ export const PROJETS: readonly Projet[] = Array.from({ length: 16 }, (_, i) => (
   tech: '[Three.js · GLSL · …]',
   summary: "[Une phrase : ce que c'est et pourquoi c'est intéressant.]",
   url: '#',
-  featured: i === 9,
 }));
+
+/** Ordre chronologique : le plus récent en dernier. */
+export const PROJETS: readonly Projet[] = [...GENERIQUES, INSPIRER_RESPIRER, SYNERLAB, MOTS_DE_TETE];

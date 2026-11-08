@@ -1,0 +1,153 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import { ETUDES, type Etude } from '../../data/etudes';
+import type { Projet } from '../../data/projets';
+import { breadcrumbs, graph, personId, website } from '../../lib/seo';
+
+export const getStaticPaths = (() =>
+  ETUDES.map(({ projet, etude }) => ({ params: { slug: etude.slug }, props: { projet, etude } }))) satisfies GetStaticPaths;
+
+interface Props {
+  projet: Projet;
+  etude: Etude;
+}
+const { projet, etude } = Astro.props;
+const site = Astro.site ?? new URL(Astro.url.origin);
+const url = new URL(`/projets/${etude.slug}`, site).href;
+const sections = etude.moments;
+const description = projet.summary;
+
+const jsonLd = graph(
+  website(site),
+  {
+    '@type': 'CreativeWork',
+    '@id': `${url}#etude`,
+    name: `${projet.name} — étude de cas`,
+    headline: projet.name,
+    description,
+    url,
+    image: new URL(etude.og, site).href,
+    inLanguage: 'fr-CA',
+    dateCreated: /^\d{4}$/.test(projet.year) ? projet.year : undefined,
+    author: { '@id': personId(site) },
+    sourceOrganization: { '@type': 'Organization', name: etude.client },
+    ...(projet.live ? { about: { '@type': 'WebSite', name: projet.name, url: projet.live } } : {}),
+    contributor: etude.credits
+      .filter((c) => c.role !== 'Client')
+      .flatMap((c) => c.names.filter((n) => !n.startsWith('[')).map((n) => ({ '@type': 'Person', name: n, jobTitle: c.role }))),
+  },
+  breadcrumbs(site, [['Accueil', '/'], ['Projets', '/#projets'], [projet.name, `/projets/${etude.slug}`]]),
+);
+---
+
+<Base title={`${projet.name} — étude de cas`} {description} mode="lire" section="projets" type="article" {jsonLd} image={etude.og}>
+  <main id="contenu" class="article case" data-article>
+    <div class="progress" data-progress role="progressbar" aria-label="Progression de lecture" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+    <header class="article__head">
+      <a class="back-link sweep" href="/#projets">← Projets</a>
+      <div class="article__title-block">
+        <p class="article__meta">
+          <span class="num">01 Projets</span>
+          <span>{projet.year}</span>
+          <span>{projet.type}</span>
+        </p>
+        <h1 class="display display--xl article__title"><mark>{projet.name}</mark></h1>
+        <p class="lede">{etude.lede}</p>
+      </div>
+    </header>
+
+    <figure class="case__cover">
+      <img src={etude.cover.src} alt={etude.cover.alt} width={etude.cover.width} height={etude.cover.height} fetchpriority="high" decoding="async" />
+    </figure>
+
+    <dl class="case__facts">
+      <div><dt>Client</dt><dd>{etude.client}</dd></div>
+      <div><dt>Mon rôle</dt><dd>{etude.role}</dd></div>
+      <div><dt>Techno</dt><dd>{projet.tech}</dd></div>
+      {projet.live && (
+        <div><dt>En ligne</dt><dd><a class="sweep" href={projet.live} rel="external noopener" target="_blank">{new URL(projet.live).host}<span class="sr-only"> (nouvel onglet)</span> ↗</a></dd></div>
+      )}
+    </dl>
+
+    <div class="article__layout">
+      <nav class="toc" aria-label="Moments clés" data-toc>
+        <details open>
+          <summary>Moments clés</summary>
+          <ol role="list">
+            {sections.map((m, i) => (
+              <li><a href={`#${m.id}`}><span>{String(i + 1).padStart(2, '0')}</span>{m.title}</a></li>
+            ))}
+            <li><a href="#credits"><span>{String(sections.length + 1).padStart(2, '0')}</span>Crédits</a></li>
+          </ol>
+        </details>
+      </nav>
+
+      <div class="prose" data-article-body>
+        {sections.map((m) => (
+          <>
+            <h2 id={m.id}>{m.title}</h2>
+            {m.text.map((t) => <p>{t}</p>)}
+            {m.blueprint && (
+              <figure class="blueprint">
+                <div class="blueprint__pages">
+                  {m.blueprint.pages.map((pg) => (
+                    <div class="blueprint__page">
+                      <p class="blueprint__name">{pg.name}</p>
+                      <ol role="list">
+                        {pg.blocks.map((b) => {
+                          const [name, mod] = b.split(' ');
+                          return <li><code>{name}</code>{mod && <span>{mod}</span>}</li>;
+                        })}
+                      </ol>
+                    </div>
+                  ))}
+                </div>
+                <figcaption>{m.blueprint.caption}</figcaption>
+              </figure>
+            )}
+            {m.code && (
+              <figure class="case__code">
+                <pre><code class={`language-${m.code.lang}`}>{m.code.source}</code></pre>
+                <figcaption>{m.code.caption}</figcaption>
+              </figure>
+            )}
+            {m.phones && (
+              <figure class="phones">
+                <ul role="list">
+                  {m.phones.map((ph) => (
+                    <li>
+                      <img src={ph.src} alt={ph.alt} width="520" height="1067" loading="lazy" decoding="async" />
+                      <span>{ph.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </figure>
+            )}
+            {m.image && (
+              <figure class:list={['case__shot', { 'case__shot--narrow': m.image.narrow }]}>
+                <img src={m.image.src} alt={m.image.alt} width={m.image.width} height={m.image.height} loading="lazy" decoding="async" />
+              </figure>
+            )}
+          </>
+        ))}
+
+        <h2 id="credits">Crédits</h2>
+        <dl class="credits">
+          {etude.credits.map((c) => (
+            <div>
+              <dt>{c.role}</dt>
+              <dd>{c.names.join(', ')}</dd>
+            </div>
+          ))}
+        </dl>
+        <p class="case__note">Captures réalisées sur le site en ligne. Photographies et logos : propriété de leurs auteurs et de {etude.client}.</p>
+      </div>
+    </div>
+
+    <footer class="article__foot">
+      {projet.live && <a class="button" href={projet.live} rel="external noopener" target="_blank">Visiter {new URL(projet.live).host} ↗</a>}
+      <a class="back-link sweep" href="/#projets">← Revenir aux projets</a>
+    </footer>
+  </main>
+</Base>

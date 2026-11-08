@@ -1,0 +1,21 @@
+---
+/**
+ * Photo d'article, avec légende facultative.
+ *   <Photo src="/carnet/x/y.webp" alt="…" width={1600} height={900} caption="…" wide />
+ * `wide` : déborde dans la colonne des notes (bureau).
+ */
+interface Props {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  caption?: string;
+  wide?: boolean;
+}
+const { src, alt, width, height, caption, wide = false } = Astro.props;
+---
+
+<figure class:list={['photo', { 'photo--wide': wide }]}>
+  <img {src} {alt} {width} {height} loading="lazy" decoding="async" />
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>

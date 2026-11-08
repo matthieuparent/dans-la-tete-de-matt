@@ -99,7 +99,9 @@ export class SectionMotion {
       { yPercent: 0, rotate: 0, duration: 1.05, ease: 'expo.out', stagger: { each: 0.045, from: dir === 1 ? 'start' : 'end' } },
       0,
     );
-    tl.fromTo(p.num, { autoAlpha: 1, backgroundSize: '0% 100%' }, { backgroundSize: '100% 100%', duration: 0.6, ease: 'power3.inOut' }, 0.05);
+    if (p.intro) tl.fromTo(p.num, { autoAlpha: 1, backgroundSize: '0% 100%' }, { backgroundSize: '100% 100%', duration: 0.6, ease: 'power3.inOut' }, 0.05);
+    // Sections : le badge (surligneur + chiffres) se révèle d'un balayage de gauche à droite.
+    else tl.fromTo(p.num, { autoAlpha: 1, clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.55, ease: 'power3.inOut' }, 0.05);
     tl.fromTo(
       p.rows,
       { autoAlpha: 0, x: -40, clipPath: 'inset(0 100% 0 0)' },
@@ -120,20 +122,21 @@ export class SectionMotion {
     gsap.killTweensOf(all);
     if (instant) {
       gsap.set(p.chars, { yPercent: 115, rotate: 9 });
-      gsap.set(p.num, { backgroundSize: '0% 100%' });
+      gsap.set(p.num, p.intro ? { backgroundSize: '0% 100%' } : { clipPath: 'inset(0% 100% 0% 0%)' });
       gsap.set(p.rows, { autoAlpha: 0, x: -40, clipPath: 'inset(0 100% 0 0)' });
       gsap.set(p.rest, { autoAlpha: 0, y: 70, filter: 'blur(12px)' });
       return;
     }
     const tl = gsap.timeline();
     tl.to(p.chars, { yPercent: -115 * dir, rotate: -6 * dir, duration: 0.5, ease: 'power3.in', stagger: { each: 0.02, from: dir === 1 ? 'start' : 'end' } }, 0);
-    tl.to(p.num, { backgroundSize: '0% 100%', duration: 0.35, ease: 'power2.in' }, 0);
+    // Sortie : le badge se replie vers la droite (le balayage continue dans le même sens).
+    tl.to(p.num, p.intro ? { backgroundSize: '0% 100%', duration: 0.35, ease: 'power2.in' } : { clipPath: 'inset(0% 0% 0% 100%)', duration: 0.35, ease: 'power2.in' }, 0);
     tl.to(p.rows, { autoAlpha: 0, x: 30, duration: 0.4, ease: 'power2.in', stagger: 0.02 }, 0);
     tl.to(p.rest, { autoAlpha: 0, y: -40 * dir, filter: 'blur(8px)', duration: 0.45, ease: 'power2.in', stagger: 0.03 }, 0);
   }
 
   destroy(): void {
+    // Ne défait que ses propres déclencheurs (ScrollReveal en a d'autres sur la même page).
     this.mm.revert();
-    ScrollTrigger.getAll().forEach((t) => t.kill());
   }
 }

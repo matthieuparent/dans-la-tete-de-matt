@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { CARNET_SECTIONS } from '../data/sections';
 import { getNotes, noteUrl } from '../lib/carnet';
+import { ETUDES } from '../data/etudes';
 
 export const GET: APIRoute = async ({ site }) => {
   const notes = await getNotes();
@@ -11,6 +12,7 @@ export const GET: APIRoute = async ({ site }) => {
     ['/carnet', latest],
     ...withNotes.map((s): [string, string | undefined] => [`/carnet/${s}`, notes.find((n) => n.data.section === s)?.data.date.toISOString()]),
     ...notes.map((n): [string, string] => [noteUrl(n), (n.data.updated ?? n.data.date).toISOString()]),
+    ...ETUDES.map(({ etude }): [string, undefined] => [`/projets/${etude.slug}`, undefined]),
   ];
   const body = urls
     .map(([p, lastmod]) => `  <url><loc>${new URL(p, site).href}</loc>${lastmod ? `<lastmod>${lastmod.slice(0, 10)}</lastmod>` : ''}</url>`)
