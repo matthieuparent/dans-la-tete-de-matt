@@ -10,9 +10,8 @@ try {
   /* pas de fichier .env : variables du système uniquement */
 }
 
-// TODO(Matthieu) : remplacer par le vrai domaine (ou définir SITE_URL au build).
-// `.example` est un TLD réservé : impossible de le publier par erreur.
-const site = process.env.SITE_URL ?? 'https://matthieuparent.example';
+// Domaine de production ; SITE_URL permet de le remplacer au build (déploiement, essais).
+const site = process.env.SITE_URL ?? 'https://matthieuparent.com';
 
 export default defineConfig({
   site,
