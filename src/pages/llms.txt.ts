@@ -13,7 +13,7 @@ export const GET: APIRoute = async ({ site }) => {
   const lines = [
     '# Dans la tête de Matt · Matthieu Parent',
     '',
-    `> ${PROFILE.name} : ${PROFILE.headline}`,
+    `> ${PROFILE.name}, ${PROFILE.headline}`,
     '',
     `${PROFILE.name} est ${PROFILE.jobTitle.charAt(0).toLowerCase()}${PROFILE.jobTitle.slice(1)} au ${PROFILE.employer.name} (${PROFILE.city}). ${PROFILE.tagline}`,
     '',

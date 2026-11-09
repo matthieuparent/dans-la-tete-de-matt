@@ -35,7 +35,7 @@ export const PROFILE = {
   employer: { name: 'Cégep Édouard-Montpetit', url: 'https://www.cegepmontpetit.ca' },
   status: 'Ouvert aux collaborations',
   /** Sous-titre explicite de l'accueil (et titre SEO) : ce pour quoi on veut être trouvé. */
-  headline: 'Enseignant en multimédia, développeur web créatif et passionné d’intelligence artificielle à Longueuil, Québec.',
+  headline: 'enseignant en multimédia, développeur web créatif et passionné d’intelligence artificielle à Longueuil, Québec.',
   tagline: "Je construis des expériences web et j'enseigne à les construire. Ce qui se passe entre les deux est ici.",
   // Courriel découpé : il n'apparaît jamais en clair dans le HTML (voir Footer.astro).
   email: { user: 'matthieuparent', domain: 'outlook.com' },
