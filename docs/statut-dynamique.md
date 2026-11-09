@@ -106,13 +106,7 @@ curl -X POST https://matthieuparent.com/api/status/override \
 
 ## Déploiement (DigitalOcean)
 
-Le site reste statique, sauf `/api/status*`, servi par Node (`@astrojs/node`, mode standalone) :
-
-```bash
-npm ci && npm run build
-npm start            # = node --env-file-if-exists=.env ./dist/server/entry.mjs
-```
-
-Le serveur Node sert aussi les pages statiques de `dist/client`. Le placer derrière nginx
-(proxy vers `127.0.0.1:4321`) et le garder en vie avec systemd ou pm2. `STATUS_DATA_DIR`
-doit être inscriptible. Le cache est en mémoire : prévoir un seul processus.
+Le site reste statique, sauf `/api/status*`, servi par Node (`@astrojs/node`, mode standalone,
+`npm start`). En production, les secrets vivent dans `/srv/portfolio/shared/.env` sur le
+serveur. Tout le reste (déploiement automatique, service, Apache) : [deploiement.md](deploiement.md).
+Le cache est en mémoire : un seul processus.

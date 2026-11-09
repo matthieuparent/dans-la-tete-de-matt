@@ -1,0 +1,59 @@
+name: Déploiement
+
+# Chaque push sur main : tests, build, envoi sur le droplet DigitalOcean.
+# Serveur, secrets et retour arrière : docs/deploiement.md
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploiement-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://matthieuparent.com
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+        env:
+          SITE_URL: https://matthieuparent.com
+
+      - name: Préparer SSH
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          printf 'Host prod\n  HostName %s\n  User portfolio\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' \
+            "${{ secrets.DEPLOY_HOST }}" > ~/.ssh/config
+
+      - name: Envoyer la version
+        run: |
+          RELEASE="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
+          echo "RELEASE=$RELEASE" >> "$GITHUB_ENV"
+          rsync -az --mkpath dist package.json package-lock.json scripts/deploy-remote.sh \
+            "prod:/srv/portfolio/releases/$RELEASE/"
+
+      - name: Activer la version
+        run: ssh prod "bash /srv/portfolio/releases/$RELEASE/deploy-remote.sh $RELEASE"
+
+      - name: Vérifier le site public
+        run: |
+          curl -fsS -o /dev/null -w 'Accueil : %{http_code}\n' https://matthieuparent.com/
+          curl -fsS -w '\n' https://matthieuparent.com/api/status
