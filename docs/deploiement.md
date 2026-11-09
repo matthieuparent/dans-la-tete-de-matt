@@ -51,6 +51,15 @@ nano /srv/portfolio/shared/.env
 systemctl restart portfolio
 ```
 
+Ne pas mettre `STATUS_DATA_DIR`, `HOST` ni `PORT` dans ce `.env` : le service les fixe déjà, et
+les valeurs du `.env` l'emporteraient (`.data` relatif pointerait vers un dossier en lecture
+seule). Pour copier le `.env` local sur le serveur en les retirant :
+
+```bash
+grep -vE '^\s*(STATUS_DATA_DIR|HOST|PORT)\s*=' .env | ssh root@159.65.219.27 \
+  'install -o portfolio -g portfolio -m 600 /dev/stdin /srv/portfolio/shared/.env && systemctl restart portfolio'
+```
+
 Voir l'état et les journaux du site :
 
 ```bash

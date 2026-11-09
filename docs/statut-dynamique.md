@@ -92,7 +92,9 @@ Action **« Obtenir le contenu de l'URL »** :
 - Corps de la requête : **JSON**, `status` = `jeu`, `minutes` = `120`
 
 Valeurs de `status` : `enseignement`, `projets`, `jeu`, `famille`, `defaut`, ou `auto` pour
-revenir au calcul automatique (équivalent à `DELETE /api/status/override`). `minutes` vaut
+revenir au calcul automatique (équivalent à `DELETE /api/status/override`, qui exige aussi
+l'en-tête `Content-Type: application/json`, sinon Astro le bloque en 403 comme formulaire
+cross-site). `minutes` vaut
 60 par défaut et 7 jours au maximum.
 
 Astuce : un raccourci « Je joue à la Switch » avec `jeu` / `180`, et un raccourci « Statut auto ».

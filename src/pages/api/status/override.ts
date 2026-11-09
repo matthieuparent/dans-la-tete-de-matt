@@ -4,7 +4,8 @@
  *   POST   /api/status/override   Authorization: Bearer <STATUS_OVERRIDE_SECRET>
  *          { "status": "jeu", "minutes": 90 }      → force « jeu » pendant 90 min
  *          { "status": "auto" }                   → retour au calcul automatique
- *   DELETE /api/status/override   (même en-tête)  → retour au calcul automatique
+ *   DELETE /api/status/override   (mêmes en-têtes, dont Content-Type: application/json,
+ *                                  sinon la protection CSRF d'Astro répond 403) → calcul automatique
  */
 import type { APIRoute } from 'astro';
 import { createHash, timingSafeEqual } from 'node:crypto';
