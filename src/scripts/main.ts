@@ -23,6 +23,8 @@ import { ArticlePage, CarnetPage, Menu } from './site/Pages';
 type Bascule = 'to-carnet' | 'to-explorer' | 'filter' | 'lire' | null;
 
 /** Pages de liste du Carnet (/carnet, /carnet/<section>) — par opposition aux articles. */
+/** Délai après la sortie avant de signaler l'attente (ms) : rien n'apparaît si la page arrive vite. */
+const WAIT_DELAY = 150;
 const isListing = (p: string): boolean => /^\/carnet(\/[^/]+)?\/?$/.test(p);
 
 class Site {
@@ -189,8 +191,26 @@ class Site {
     const original = e.loader;
     // La page cible se charge PENDANT l'animation de sortie : pas de temps mort.
     e.loader = async () => {
-      await Promise.all([original(), outro()]);
+      let loaded = false;
+      const page = original().finally(() => (loaded = true));
+      await outro();
+      // Sortie finie, page pas encore là : on ne laisse pas l'écran figé. Après un court délai
+      // (invisible sur une bonne connexion), les points montrent qu'on attend.
+      if (!loaded) {
+        const timer = window.setTimeout(() => this.setWaiting(true), WAIT_DELAY);
+        try {
+          await page;
+        } finally {
+          window.clearTimeout(timer);
+          this.setWaiting(false);
+        }
+      } else await page;
     };
+  }
+
+  private setWaiting(on: boolean): void {
+    this.html.classList.toggle('is-waiting', on);
+    if (this.director) this.director.waiting = on;
   }
 
   private beforeSwap(e: TransitionBeforeSwapEvent): void {

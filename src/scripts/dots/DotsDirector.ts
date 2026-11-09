@@ -66,17 +66,29 @@ function liveRotation(s: PackedShape, t: number, reduced: boolean, scrollTurns =
  * Termine aussi un fondu d'arrivée resté incomplet (onglet ralenti).
  */
 class FloatDriver implements Driver {
+  /** 0 → 1 : part de l'effet « en attente » (lissé, pour entrer et sortir en douceur). */
+  private wait = 0;
+  /** Opacité de repos, qui monte jusqu'à SUSPENDED_FADE. */
+  private base: number;
+
   constructor(
     private readonly d: DotsDirector,
     private readonly shape: PackedShape,
-  ) {}
+  ) {
+    this.base = d.renderer.fade;
+  }
 
-  update(dt: number): boolean {
+  update(dt: number, t: number): boolean {
     const r = this.d.renderer;
     if (r.progress < 1) r.progress = Math.min(1, r.progress + dt * 2);
-    if (r.fade < SUSPENDED_FADE) r.fade = Math.min(SUSPENDED_FADE, r.fade + dt);
+    if (this.base < SUSPENDED_FADE) this.base = Math.min(SUSPENDED_FADE, this.base + dt);
+    // Page suivante en retard : la poussière respire (s'éclaire par vagues) et s'agite un peu.
+    this.wait += ((this.d.waiting ? 1 : 0) - this.wait) * Math.min(1, dt * 3);
+    const breath = 0.5 - 0.5 * Math.cos((t * Math.PI * 2) / 1.3);
+    r.fade = this.base + this.wait * 0.4 * breath;
     r.setRotation([0, 0], [0, 0]);
-    r.setDrift(this.shape.drift, this.shape.drift);
+    const drift = this.shape.drift * (1 + this.wait * 1.6);
+    r.setDrift(drift, drift);
     return true;
   }
 }
@@ -321,6 +333,9 @@ export class DotsDirector {
     const m = 12;
     return { x0: (m - st.x) / k, y0: (m - st.y) / k, x1: (window.innerWidth - m - st.x) / k, y1: (window.innerHeight - m - st.y) / k };
   }
+
+  /** Page suivante en retard (bascule) : la poussière en suspens le montre. */
+  waiting = false;
 
   /** Forme en suspens affichée (null ailleurs que sur les pages Lire). */
   suspended: PackedShape | null = null;

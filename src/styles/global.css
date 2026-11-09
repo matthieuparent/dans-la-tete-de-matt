@@ -424,7 +424,8 @@
   .stage__poster.is-swapping { opacity: 0; }
   .dots-ready .stage__poster { opacity: 0; transition: opacity 0.6s; }
   /* Retour vers l'Explorer : l'image de secours ne s'affiche pas le temps que les points arrivent. */
-  .dots-returning .stage__poster { opacity: 0; transition: none; }
+  .is-waiting, .is-waiting * { cursor: progress; }
+.dots-returning .stage__poster { opacity: 0; transition: none; }
   .labels-wait .stage__labels { opacity: 0 !important; transition: none; }
   .stage__labels { pointer-events: none; font-size: 13px; transition: opacity 120ms linear; }
   .stage__label { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -78%); white-space: nowrap; }

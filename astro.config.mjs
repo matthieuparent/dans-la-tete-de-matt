@@ -23,6 +23,8 @@ export default defineConfig({
   adapter: node({ mode: 'standalone' }),
   // Code : monospace système sur fond vert profond (pas de thème Shiki coloré, cf. DA).
   markdown: { syntaxHighlight: false },
-  prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
+  // Pages légères (~25 Ko) : on précharge chaque lien interne dès qu'il entre à l'écran,
+  // sur mobile aussi (pas de survol au doigt). Astro s'abstient en mode économie de données.
+  prefetch: { prefetchAll: true, defaultStrategy: 'viewport' },
   devToolbar: { enabled: false },
 });
