@@ -28,9 +28,11 @@ export interface SectionInfo {
 
 export const PROFILE = {
   name: 'Matthieu Parent',
-  role: 'Professeur, développeur créatif',
+  role: 'Enseignant en multimédia et penseur créatif',
   disciplines: ['Curieux et créatif', 'Expérience utilisateur', 'Débrouillardise'],
   city: 'Longueuil, QC, Canada',
+  jobTitle: "Enseignant en Techniques d'intégration multimédia",
+  employer: { name: 'Cégep Édouard-Montpetit', url: 'https://www.cegepmontpetit.ca' },
   status: 'Ouvert aux collaborations',
   /** Sous-titre explicite de l'accueil (et titre SEO) : ce pour quoi on veut être trouvé. */
   headline: 'Enseignant en multimédia, développeur web créatif et passionné d’intelligence artificielle à Longueuil, Québec.',

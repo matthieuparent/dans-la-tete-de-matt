@@ -1,11 +1,13 @@
 import type { APIRoute } from 'astro';
 import { CARNET_SECTIONS } from '../data/sections';
-import { getNotes, noteUrl } from '../lib/carnet';
+import { getIndexableSections, getNotes, noteUrl } from '../lib/carnet';
 import { ETUDES } from '../data/etudes';
 
 export const GET: APIRoute = async ({ site }) => {
   const notes = await getNotes();
-  const withNotes = CARNET_SECTIONS.filter((s) => notes.some((n) => n.data.section === s));
+  // Mêmes sections que celles qui ne sont pas en noindex (au moins une note ou une étude de cas).
+  const indexable = await getIndexableSections();
+  const withNotes = CARNET_SECTIONS.filter((s) => indexable.has(s));
   const latest = notes[0]?.data.date.toISOString();
   const urls: Array<[string, string | undefined]> = [
     ['/', latest],

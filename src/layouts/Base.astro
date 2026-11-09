@@ -12,6 +12,7 @@ import MobileMenu from '../components/MobileMenu.astro';
 
 interface Props {
   title: string;
+  fullTitle?: boolean;
   description: string;
   mode: 'explorer' | 'lire';
   /** Section pour le bouton opposé (Explorer → /#section, Lire → /carnet/section). */
@@ -25,7 +26,7 @@ interface Props {
   image?: string;
 }
 
-const { title, description, mode, section, type, jsonLd, noindex, published, modified, image } = Astro.props;
+const { title, fullTitle, description, mode, section, type, jsonLd, noindex, published, modified, image } = Astro.props;
 ---
 
 <!doctype html>
@@ -34,7 +35,7 @@ const { title, description, mode, section, type, jsonLd, noindex, published, mod
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <script is:inline>document.documentElement.classList.replace('no-js', 'js');</script>
-    <Seo {title} {description} {type} {jsonLd} {noindex} {published} {modified} {image} />
+    <Seo {title} {fullTitle} {description} {type} {jsonLd} {noindex} {published} {modified} {image} />
     <meta name="theme-color" content="#E9E5DA" />
     <meta name="color-scheme" content="light" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

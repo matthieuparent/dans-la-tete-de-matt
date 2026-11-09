@@ -3,6 +3,8 @@ import { LOCALE, SITE_NAME } from '../lib/seo';
 
 interface Props {
   title: string;
+  /** Titre déjà complet : pas de suffixe « · Dans la tête de Matt ». */
+  fullTitle?: boolean;
   description: string;
   type?: 'website' | 'article';
   image?: string;
@@ -12,10 +14,10 @@ interface Props {
   modified?: Date;
 }
 
-const { title, description, type = 'website', image = '/og.png', jsonLd, noindex = false, published, modified } = Astro.props;
+const { title, fullTitle: isFull = false, description, type = 'website', image = '/og.png', jsonLd, noindex = false, published, modified } = Astro.props;
 const site = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/\/?index$/, '').replace(/\/$/, '') || '/', site).href;
-const fullTitle = title === SITE_NAME ? `${SITE_NAME} · Matthieu Parent` : `${title} · ${SITE_NAME}`;
+const fullTitle = isFull ? title : title === SITE_NAME ? `${SITE_NAME} · Matthieu Parent` : `${title} · ${SITE_NAME}`;
 const img = new URL(image, site).href;
 ---
 

@@ -35,6 +35,6 @@ const jsonLd = graph(
 );
 ---
 
-<Base title={`Carnet · ${label}`} {description} mode="lire" {section} {jsonLd} noindex={items.length === 0}>
+<Base title={`Carnet · ${label}`} {description} mode="lire" {section} {jsonLd} noindex={!items.some((i) => i.url)}>
   <CarnetView {items} {section} {total} />
 </Base>

@@ -15,7 +15,8 @@ const items = await getCarnetItems();
 const lastBySection: Record<string, (typeof items)[number] | undefined> = Object.fromEntries(
   SECTIONS.map((s) => [s.id, items.find((i) => i.section === s.id && i.url)]),
 );
-const description = `${PROFILE.name}, ${PROFILE.role.toLowerCase()}. ${PROFILE.tagline}`;
+const description =
+  "Découvrez les projets, expérimentations et réflexions de Matthieu Parent, enseignant en multimédia et développeur web passionné par la création numérique, l'expérience utilisateur et l'intelligence artificielle.";
 
 const jsonLd = graph(website(site), person(site), {
   '@type': 'ProfilePage',
@@ -34,7 +35,7 @@ const jsonLd = graph(website(site), person(site), {
 const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`;
 ---
 
-<Base title={`${PROFILE.name} · Enseignant en multimédia et développeur web créatif`} {description} mode="explorer" {jsonLd}>
+<Base title={`${PROFILE.name} | Enseignant en multimédia et développeur web créatif`} fullTitle {description} mode="explorer" {jsonLd}>
   <!-- explorer--stage-fade : essai mobile (fondu flou sous la forme). Retirer la classe pour revenir au filet. -->
   <main id="contenu" class="explorer explorer--stage-fade" data-explorer>
     <!-- Zone des points : fixe à l'écran (sticky) pendant que le texte défile. -->

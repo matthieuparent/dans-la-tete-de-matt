@@ -116,6 +116,11 @@ export async function getCarnetItems(): Promise<CarnetItem[]> {
   return [...upcoming, ...[...notes, ...getProjetItems()].sort((a, b) => b.date.getTime() - a.date.getTime())];
 }
 
+/** Sections du carnet qui ont au moins une page publiée (note ou étude de cas) : les seules indexées. */
+export async function getIndexableSections(): Promise<Set<CarnetSection>> {
+  return new Set((await getCarnetItems()).filter((i) => i.url).map((i) => i.section));
+}
+
 export const countItems = (items: CarnetItem[]): Record<CarnetSection, number> =>
   Object.fromEntries(CARNET_SECTIONS.map((s) => [s, items.filter((i) => i.section === s).length])) as Record<CarnetSection, number>;
 
