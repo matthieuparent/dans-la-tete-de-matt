@@ -32,6 +32,8 @@ export const PROFILE = {
   disciplines: ['Curieux et créatif', 'Expérience utilisateur', 'Débrouillardise'],
   city: 'Longueuil, QC, Canada',
   status: 'Ouvert aux collaborations',
+  /** Sous-titre explicite de l'accueil (et titre SEO) : ce pour quoi on veut être trouvé. */
+  headline: 'Enseignant en multimédia, développeur web créatif et passionné d’intelligence artificielle à Longueuil, Québec.',
   tagline: "Je construis des expériences web et j'enseigne à les construire. Ce qui se passe entre les deux est ici.",
   // Courriel découpé : il n'apparaît jamais en clair dans le HTML (voir Footer.astro).
   email: { user: 'matthieuparent', domain: 'outlook.com' },
@@ -96,7 +98,7 @@ export const SECTIONS: readonly SectionInfo[] = [
     num: '02',
     label: 'Enseignement',
     title: 'Enseigne&shy;ment',
-    text: "J'enseigne la programmation [niveau, établissement]. Ce que j'essaie de transmettre : [une phrase].",
+    text: "J'enseigne le développement web et la création numérique en Techniques d'intégration multimédia au Cégep Édouard-Montpetit. Mon objectif : former des créateurs curieux, autonomes et capables de s'adapter aux technologies de demain.",
     rows: [
       ['Depuis', ENSEIGNEMENT.depuis],
       ['Cette session', ENSEIGNEMENT.session.join(' · ')],

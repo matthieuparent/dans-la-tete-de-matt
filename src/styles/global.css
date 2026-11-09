@@ -486,6 +486,8 @@
     justify-content: space-between;
     gap: 32px;
   }
+  .sec__id { margin: 0; font-size: clamp(15px, 1.15vw, 17px); line-height: 1.45; max-width: 560px; color: var(--muted); text-wrap: pretty; }
+  .sec__id strong { font-weight: 500; color: var(--ink); }
   .sec--intro .facts { grid-template-columns: 112px 1fr; }
   .sec--intro .facts dt { padding-left: 16px; }
   .sec__hero {
