@@ -2,15 +2,19 @@
 import Base from '../layouts/Base.astro';
 import StatusLabel from '../components/StatusLabel.astro';
 import { PROFILE, SECTIONS, SHAPE_IDS, plain } from '../data/sections';
-import { PROJETS } from '../data/projets';
 import { STAGE_H, STAGE_W, buildShape } from '../scripts/dots/shapes';
-import { getNotes, noteUrl, formatDate } from '../lib/carnet';
+import { getCarnetItems, getNotes, noteUrl, formatDate } from '../lib/carnet';
 import { SITE_NAME, graph, person, website } from '../lib/seo';
 
 const site = Astro.site ?? new URL(Astro.url.origin);
 const [intro, ...rest] = SECTIONS;
 const shapes = SHAPE_IDS.map((id) => buildShape(id, 0.3));
 const latest = (await getNotes()).slice(0, 3);
+// Dernier élément publié (note ou étude de cas ; pas les notes « À venir », sans page) de chaque section.
+const items = await getCarnetItems();
+const lastBySection: Record<string, (typeof items)[number] | undefined> = Object.fromEntries(
+  SECTIONS.map((s) => [s.id, items.find((i) => i.section === s.id && i.url)]),
+);
 const description = `${PROFILE.name}, ${PROFILE.role.toLowerCase()}. ${PROFILE.tagline}`;
 
 const jsonLd = graph(website(site), person(site), {
@@ -99,21 +103,6 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
               </dl>
             )}
 
-            {s.id === 'projets' && (
-              <details class="project-list">
-                <summary>Liste des {PROJETS.length} projets</summary>
-                <ol role="list">
-                  {PROJETS.map((p, i) => (
-                    <li>
-                      <button type="button" data-open-project={i}>
-                        <span class="project-list__year">{p.year}</span> {p.name}
-                      </button>
-                    </li>
-                  ))}
-                </ol>
-              </details>
-            )}
-
             {s.id === 'carnet' ? (
               <>
                 {latest.length > 0 && (
@@ -136,7 +125,16 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
                     <span>{s.hint}</span>
                   </p>
                 )}
-                <p class="sec__more"><a class="sweep" href={`/carnet/${s.id}`}>Lire les notes « {s.label} »</a></p>
+                <p class="sec__actions">
+                  {lastBySection[s.id] && (
+                    <a class="button" href={lastBySection[s.id]?.url}>
+                      <span class="sr-only">Le plus récent : </span>Lire « {lastBySection[s.id]?.accroche} »
+                    </a>
+                  )}
+                  <a class="button button--ghost" href={`/carnet/${s.id}`}>
+                    Voir les notes<span class="sr-only"> « {s.label} »</span>
+                  </a>
+                </p>
               </>
             )}
           </div>
@@ -160,7 +158,7 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
     </nav>
   </main>
 
-  <!-- Fiche projet (survol / toucher d'un noyau, ou liste accessible). -->
+  <!-- Fiche projet : aperçu au survol d'un noyau (souris), panneau au toucher (mobile). -->
   <aside class="project-card" data-project-card hidden aria-live="polite" aria-label="Projet">
     <div class="project-card__media">
       <img data-card-thumb alt="" width="600" height="315" decoding="async" hidden />
@@ -171,6 +169,7 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
       <h3 class="project-card__name" data-card-name></h3>
       <p class="project-card__summary" data-card-summary></p>
       <p class="project-card__meta" data-card-tech></p>
+      <p class="project-card__hint" data-card-hint></p>
       <div class="project-card__actions">
         <a data-card-link href="#">Ouvrir le projet <span class="project-card__arrow" aria-hidden="true">→</span></a>
         <button type="button" data-card-close aria-label="Fermer la fiche">Fermer</button>

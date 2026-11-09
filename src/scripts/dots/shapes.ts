@@ -2,14 +2,14 @@
  * Formes de points — module isomorphe (build Node + navigateur, aucune dépendance DOM).
  *
  * Portage des formules des maquettes (`Sections.dc.html` : intro(), projets(), enseignement(),
- * jeu(), ia(), famille()). Repère : l'espace « scène » de la maquette, 720 × 708 px,
+ * recharge(), ia(), famille()). Repère : l'espace « scène » de la maquette, 720 × 708 px,
  * origine en haut à gauche, y vers le bas. z en px (même échelle), positif vers le spectateur.
  *
  * Chaque générateur reçoit une densité `d` (≈ 1 = densité de la maquette) qui module les
  * remplissages aléatoires et le pas des contours, pour tenir le budget de points
  * (6 000 bureau, 1 500 mobile, 700 appareils modestes) sans trouer les silhouettes.
  */
-import type { ShapeId } from '../../data/sections';
+import { ENSEIGNEMENT, type ShapeId } from '../../data/sections';
 import { PROJETS } from '../../data/projets';
 
 export const STAGE_W = 720;
@@ -233,54 +233,72 @@ function intro(d: number): RawShape {
 }
 
 /** Taille commune des noyaux (px scène) : centre ≈ 4,4 px de rayon, nuage ≈ 14 px. */
-const NUCLEUS_SIZE = 8;
+/**
+ * Taille d'un noyau (px scène). Avec peu de projets, des noyaux généreux : sur mobile la scène
+ * est réduite à ~40 %, un noyau doit rester lisible et facile à toucher.
+ */
+export const NUCLEUS_SIZE = 20;
+/** Rayon du halo des Projets, en multiple de la taille d'un noyau. */
+export const HALO_K = 2.6;
 
-/** Position d'un noyau sur la ligne de temps (t ∈ [0,1]). */
-function nucleusAt(t: number): { x: number; y: number } {
-  return { x: 80 + t * 560, y: 540 - t * 360 + 60 * Math.sin(t * 7) };
+/**
+ * Ligne de temps (t ∈ [0,1]) : de bas-gauche (le plus ancien) à haut-droite (le plus récent),
+ * sur presque toute la largeur de la scène, avec une légère ondulation.
+ */
+export function nucleusAt(t: number): { x: number; y: number } {
+  return { x: 56 + t * 608, y: 520 - t * 330 + 46 * Math.sin(t * Math.PI * 2) };
 }
 
-/** 01 · Projets : un noyau par projet (taille = envergure, ordre = année), reliés par une ligne de temps. */
+/** 01 · Projets : un noyau par projet réel (ordre chronologique, le plus ancien à gauche), reliés par une ligne de temps. */
 function projets(d: number): RawShape {
   const b = new ShapeBuilder(d, 21);
   const R = rng(21);
   const N = PROJETS.length;
+  const tOf = (i: number): number => (N > 1 ? i / (N - 1) : 0.5);
   const nodes = PROJETS.map((p, i) => {
-    const { x, y } = nucleusAt(N > 1 ? i / (N - 1) : 0.5);
+    const { x, y } = nucleusAt(tOf(i));
     // Tous les noyaux ont la même taille (retour client) : seule la position (l'année) varie.
-    return { x, y, s: NUCLEUS_SIZE, featured: !!p.featured, year: p.year };
+    return { x, y, s: NUCLEUS_SIZE, year: p.year };
   });
 
-  const featured = nodes.find((n) => n.featured);
-  if (featured) b.halo(featured.x, featured.y, featured.s * 3.4);
+  // Halo surligneur sur le projet le plus récent : « maintenant », au bout de la ligne de temps.
+  const latest = nodes[N - 1];
+  if (latest) b.halo(latest.x, latest.y, latest.s * HALO_K);
 
   for (let i = 0, n = b.n(260); i < n; i++) b.dot(20 + R() * 680, 40 + R() * 640, 0.7, 0.1 + R() * 0.2);
 
-  for (let i = 0; i < N - 1; i++) {
-    const a = nodes[i]!;
-    const c = nodes[i + 1]!;
-    b.line(a.x, a.y, c.x, c.y, b.step(7), 0.7, 0.3, { key: true });
+  // Ligne de temps continue (suit la courbe, pas des segments droits), qui dépasse un peu
+  // aux deux bouts : le temps continue avant et après.
+  const t0 = -0.06;
+  const t1 = 1.06;
+  const steps = Math.round(720 / b.step(7));
+  for (let k = 0; k <= steps; k++) {
+    const t = t0 + ((t1 - t0) * k) / steps;
+    const { x, y } = nucleusAt(t);
+    const edge = Math.min(t - t0, t1 - t) / 0.06;
+    b.dot(x, y, 0.8, 0.35 * Math.min(1, edge), { key: true });
   }
 
   nodes.forEach((nd, i) => {
-    // Nuage gaussien autour du centre : |N(0,1)| × 1,7 × taille.
-    for (let k = 0, n = b.n(48); k < n; k++) {
+    // Nuage gaussien autour du centre : |N(0,1)| × 1,5 × taille.
+    for (let k = 0, n = b.n(110); k < n; k++) {
       const a = R() * Math.PI * 2;
-      const rr = Math.abs(R.g()) * nd.s * 1.7;
-      b.dot(nd.x + Math.cos(a) * rr, nd.y + Math.sin(a) * rr, 0.7 + R() * 0.9, 0.3 + R() * 0.55);
+      const rr = Math.abs(R.g()) * nd.s * 1.5;
+      b.dot(nd.x + Math.cos(a) * rr, nd.y + Math.sin(a) * rr, 0.8 + R() * 1.1, 0.3 + R() * 0.55);
     }
-    // Quatre petits arcs d'orbite.
-    for (let k = 0; k < 4; k++) {
+    // Petits arcs d'orbite.
+    for (let k = 0; k < 5; k++) {
       const a = R() * Math.PI * 2;
-      const rr = nd.s * (2.4 + R() * 1.6);
-      for (let j = 0; j <= 4; j++) {
-        const t = a - (0.45 * j) / 4;
-        b.dot(nd.x + Math.cos(t) * rr, nd.y + Math.sin(t) * rr, 0.75, 0.4, { key: true });
+      const rr = nd.s * (2.2 + R() * 1.2);
+      for (let j = 0; j <= 6; j++) {
+        const t = a - (0.5 * j) / 6;
+        b.dot(nd.x + Math.cos(t) * rr, nd.y + Math.sin(t) * rr, 0.9, 0.45, { key: true });
       }
     }
-    b.dot(nd.x, nd.y, nd.s * 0.55, 1, { key: true });
+    b.dot(nd.x, nd.y, nd.s * 0.5, 1, { key: true });
     b.nuclei.push({ x: nd.x, y: nd.y, r: nd.s, index: i });
-    if (i % 5 === 0) b.label(nd.x, nd.y + nd.s * 3 + 16, nd.year);
+    // Année sous chaque noyau, sous les orbites (et sous le halo du projet mis en avant).
+    b.label(nd.x, nd.y + nd.s * 3.4 + 40, nd.year);
   });
   return b.build('projets', { drift: 4 });
 }
@@ -327,12 +345,12 @@ function enseignement(d: number): RawShape {
       b.line(xx - 18, yy + 8, xx + 18, yy + 8, b.step(4), 1, 0.7, { key: true });
     }
   }
-  b.label(360, 96, '[Cours en vedette]');
+  b.label(360, 96, ENSEIGNEMENT.vedette);
   return b.build('enseignement');
 }
 
-/** 03 · Jeu : console portable (corps arrondi, écran vide, 2 joysticks, 4 boutons en losange). */
-function jeu(d: number): RawShape {
+/** 03 · Recharge : console portable (corps arrondi, écran vide, 2 joysticks, 4 boutons en losange). */
+function recharge(d: number): RawShape {
   const b = new ShapeBuilder(d, 9);
   const R = rng(9);
   const x0 = 120;
@@ -366,7 +384,7 @@ function jeu(d: number): RawShape {
   b.ring(166, 300, 18, b.step(4), 1.2, 1);
   b.ring(554, 390, 18, b.step(4), 1.2, 1);
   for (const [x, y] of [[554, 284], [554, 316], [538, 300], [570, 300]] as const) b.dot(x, y, 4, 1, { key: true });
-  return b.build('jeu');
+  return b.build('recharge');
 }
 
 /** 04 · IA : perceptron 5 couches (4-7-9-7-3), un chemin activé au surligneur. */
@@ -510,7 +528,7 @@ function carnet(d: number): RawShape {
   return b.build('carnet');
 }
 
-const GENERATORS: Record<ShapeId, (d: number) => RawShape> = { intro, projets, enseignement, jeu, ia, famille, carnet };
+const GENERATORS: Record<ShapeId, (d: number) => RawShape> = { intro, projets, enseignement, recharge, ia, famille, carnet };
 
 export function buildShape(id: ShapeId, density: number): RawShape {
   return GENERATORS[id](density);
@@ -612,6 +630,34 @@ export function scatterShape(s: PackedShape, seed = 77): PackedShape {
     meta[o + 2] = 0;
   }
   return { id: 'lines', count: s.count, pos, meta, rot: [0, 0], spin: 0, drift: 0 };
+}
+
+/**
+ * Points « en suspens » (pages Lire) : chaque point part de la forme et se pose quelque part
+ * dans la page, répartis sur toute la fenêtre (`box` = fenêtre en coordonnées scène).
+ * Petits, sans surligneur, presque à plat : un fond de poussière, pas une forme.
+ * Le hasard est déterministe : la même forme donne toujours la même poussière.
+ */
+export function suspendShape(s: PackedShape, box: { x0: number; y0: number; x1: number; y1: number }, seed = 53): PackedShape {
+  const R = rng(seed);
+  const pos = new Float32Array(s.pos.length);
+  const meta = new Float32Array(s.meta);
+  const w = box.x1 - box.x0;
+  const h = box.y1 - box.y0;
+  for (let i = 0; i < s.count; i++) {
+    const o = i * 3;
+    pos[o] = box.x0 + R() * w;
+    pos[o + 1] = box.y0 + R() * h;
+    pos[o + 2] = (R() * 2 - 1) * DEPTH_SCALE * 0.15;
+    // ~1 point sur 12 reste un peu plus présent (et un peu plus gros) : quelques repères
+    // dans la poussière, le reste à peine visible.
+    const bright = R() < 0.08;
+    meta[o] = Math.min(meta[o]!, 1.4) * (bright ? 1.15 : 0.85);
+    meta[o + 1] = bright ? 0.65 + R() * 0.3 : 0.12 + R() * 0.2;
+    meta[o + 2] = 0;
+  }
+  // Dérive lente (champ de flux du shader) : chaque point flotte sur place, en suspens.
+  return { id: 'lines', count: s.count, pos, meta, rot: [0, 0], spin: 0, drift: 5 };
 }
 
 /* ------------------------------------------------------------------ */

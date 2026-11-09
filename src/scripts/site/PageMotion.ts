@@ -27,7 +27,10 @@ const onScreen = (els: HTMLElement[]): HTMLElement[] =>
     return r.top < window.innerHeight && r.bottom > 0;
   });
 const visibleContent = (root: HTMLElement): HTMLElement[] =>
-  onScreen(Array.from(root.querySelectorAll<HTMLElement>('.note-list > li, .notes__empty, .case__cover, .case__facts, .article__layout, .article__foot')));
+  onScreen(Array.from(root.querySelectorAll<HTMLElement>('.note-list > li, .notes__empty, .case__cover, .case__facts, .prose > *, .article__foot')));
+
+/** Surlignés (<mark>) d'un titre. */
+const marks = (title: HTMLElement | null): HTMLElement[] => (title ? Array.from(title.querySelectorAll<HTMLElement>('mark')) : []);
 
 interface Targets {
   title: HTMLElement | null;
@@ -58,6 +61,8 @@ export function preparePage(root: HTMLElement): void {
   const t = targets(root);
   const chars = t.title ? splitChars(t.title) : [];
   gsap.set(chars, { yPercent: 115, rotate: 8 });
+  // Le surligné du titre attend que les lettres soient arrivées (cf. enterPage).
+  gsap.set(marks(t.title), { backgroundSize: '0% 100%' });
   gsap.set(t.bar, { autoAlpha: 0, y: -24 });
   gsap.set(t.blocks, { autoAlpha: 0, y: 60, filter: 'blur(12px)' });
 }
@@ -68,6 +73,12 @@ export function enterPage(root: HTMLElement): Promise<void> {
   const chars = t.title ? splitChars(t.title) : [];
   const tl = gsap.timeline();
   tl.to(chars, { yPercent: 0, rotate: 0, duration: 1.1, ease: 'expo.out', stagger: 0.03 }, 0.1);
+  // Une fois le texte posé, le surligneur passe de gauche à droite (le geste de la marque).
+  const hl = marks(t.title);
+  if (hl.length) {
+    const landed = 0.1 + Math.max(0, chars.length - 1) * 0.03 + 0.45;
+    tl.to(hl, { backgroundSize: '100% 100%', duration: 0.6, ease: 'power3.inOut', stagger: 0.12, clearProps: 'backgroundSize' }, landed);
+  }
   tl.to(t.bar, { autoAlpha: 1, y: 0, duration: 0.8, ease: 'expo.out', stagger: 0.05 }, 0.2);
   tl.to(t.blocks, { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 1.1, ease: 'expo.out', stagger: 0.08, clearProps: 'filter,transform' }, 0.25);
   return done(tl);
@@ -79,7 +90,7 @@ export function exitPage(root: HTMLElement): Promise<void> {
     return Promise.resolve();
   }
   const t = targets(root);
-  const all = [...(t.title ? [t.title] : []), ...t.bar, ...t.blocks.filter((b) => !b.matches('.toc')), ...visibleContent(root)];
+  const all = [...(t.title ? [t.title] : []), ...t.bar, ...t.blocks, ...visibleContent(root)];
   const tl = gsap.timeline();
   tl.to(all, { autoAlpha: 0, y: -40, filter: 'blur(10px)', duration: 0.45, ease: 'power2.in', stagger: 0.025 });
   return done(tl);
@@ -91,6 +102,7 @@ export function prepareList(root: HTMLElement): void {
   if (prefersReducedMotion()) return;
   const title = root.querySelector<HTMLElement>('.carnet__chapter h2');
   gsap.set(title ? splitChars(title) : [], { yPercent: 115, rotate: 8 });
+  gsap.set(marks(title), { backgroundSize: '0% 100%' });
   gsap.set(listBlocks(root), { autoAlpha: 0, y: 50, filter: 'blur(10px)' });
 }
 
@@ -98,7 +110,10 @@ export function enterList(root: HTMLElement): Promise<void> {
   if (prefersReducedMotion()) return Promise.resolve();
   const title = root.querySelector<HTMLElement>('.carnet__chapter h2');
   const tl = gsap.timeline();
-  tl.to(title ? splitChars(title) : [], { yPercent: 0, rotate: 0, duration: 1, ease: 'expo.out', stagger: 0.035 }, 0);
+  const chars = title ? splitChars(title) : [];
+  tl.to(chars, { yPercent: 0, rotate: 0, duration: 1, ease: 'expo.out', stagger: 0.035 }, 0);
+  const hl = marks(title);
+  if (hl.length) tl.to(hl, { backgroundSize: '100% 100%', duration: 0.55, ease: 'power3.inOut', stagger: 0.12, clearProps: 'backgroundSize' }, Math.max(0, chars.length - 1) * 0.035 + 0.4);
   tl.to(listBlocks(root), { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.95, ease: 'expo.out', stagger: 0.06, clearProps: 'filter,transform' }, 0.1);
   return done(tl);
 }

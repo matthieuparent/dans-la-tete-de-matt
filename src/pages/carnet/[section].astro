@@ -21,7 +21,7 @@ const jsonLd = graph(
   {
     '@type': 'CollectionPage',
     url: new URL(`/carnet/${section}`, site).href,
-    name: `Carnet — ${label}`,
+    name: `Carnet · ${label}`,
     description,
     inLanguage: 'fr-CA',
     author: { '@id': personId(site) },
@@ -35,6 +35,6 @@ const jsonLd = graph(
 );
 ---
 
-<Base title={`Carnet — ${label}`} {description} mode="lire" {section} {jsonLd} noindex={items.length === 0}>
+<Base title={`Carnet · ${label}`} {description} mode="lire" {section} {jsonLd} noindex={items.length === 0}>
   <CarnetView {items} {section} {total} />
 </Base>

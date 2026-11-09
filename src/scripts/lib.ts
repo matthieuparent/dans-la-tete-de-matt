@@ -65,4 +65,5 @@ export function supportsWebGL(): boolean {
 }
 
 export const isExplorerPath = (p: string): boolean => p === '/' || p === '/index.html' || p === '';
-export const isCarnetPath = (p: string): boolean => p === '/carnet' || p.startsWith('/carnet/');
+/** Pages du mode Lire : Carnet, notes ET études de cas (/projets/…), toutes reliées par les bascules. */
+export const isCarnetPath = (p: string): boolean => p === '/carnet' || p.startsWith('/carnet/') || p.startsWith('/projets/');

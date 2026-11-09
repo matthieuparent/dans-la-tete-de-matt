@@ -1,51 +1,33 @@
 /** Contrôleurs légers des pages Carnet, Article et du menu mobile. */
 
-/** Carnet : la barre de filtres devient collante en remontant, se masque en descendant. */
+/**
+ * Carnet : bascule liste / cartes (module à part) et puce active visible.
+ * La barre de filtres est simplement collante (CSS) : elle défile avec la page jusqu'à toucher
+ * l'en-tête, puis reste en place. Elle ne se masque plus en descendant (elle bougeait avant
+ * même d'atteindre sa zone).
+ */
 export class CarnetPage {
   private readonly abort = new AbortController();
-  private lastY = window.scrollY;
-  private raf = 0;
 
   constructor(root: HTMLElement) {
-    const bar = root.querySelector<HTMLElement>('[data-filter-bar]');
-    const sig = { signal: this.abort.signal };
-    if (bar) {
-      window.addEventListener('scroll', () => {
-        if (this.raf) return;
-        this.raf = requestAnimationFrame(() => {
-          this.raf = 0;
-          const y = window.scrollY;
-          const down = y > this.lastY + 2;
-          const up = y < this.lastY - 2;
-          if (down) bar.classList.add('is-hidden');
-          else if (up) bar.classList.remove('is-hidden');
-          this.lastY = y;
-        });
-      }, { passive: true, ...sig });
-    }
-    // Liste / cartes : mémorisé pour les prochaines visites.
+    // Liste / cartes (mémorisé), transition et vignette au survol : chargé à part (GSAP).
     const notes = root.querySelector<HTMLElement>('[data-notes]');
-    root.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((btn) =>
-      btn.addEventListener('click', () => {
-        if (!notes) return;
-        const view = btn.dataset.viewBtn ?? 'list';
-        notes.dataset.view = view;
-        root.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-        try {
-          localStorage.setItem('carnet-view', view);
-        } catch {
-          /* stockage indisponible : le choix vaut pour cette page seulement */
-        }
-      }, sig),
-    );
+    if (notes) {
+      void import('./NotesView').then(({ NotesView }) => {
+        if (this.abort.signal.aborted) return;
+        this.view = new NotesView(root, notes);
+      });
+    }
 
     // Filtre actif : on garde la puce visible dans la barre qui défile à l'horizontale (mobile).
     root.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'instant' });
   }
 
+  private view: { destroy(): void } | null = null;
+
   destroy(): void {
-    cancelAnimationFrame(this.raf);
     this.abort.abort();
+    this.view?.destroy();
   }
 }
 

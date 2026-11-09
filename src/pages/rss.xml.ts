@@ -16,7 +16,7 @@ export const GET: APIRoute = async ({ site }) => {
   <channel>
     <title>Carnet de Matt</title>
     <link>${new URL('/carnet', site).href}</link>
-    <description>Making-of, notes de cours, jeux, IA et vie de famille — par Matthieu Parent.</description>
+    <description>Ce qui se passe dans la tête de Matthieu Parent, mis par écrit : enseignement, projets, recharge, IA et famille.</description>
     <language>fr-CA</language>
 ${items}
   </channel>

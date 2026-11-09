@@ -11,7 +11,7 @@
  */
 import type { TransitionBeforePreparationEvent, TransitionBeforeSwapEvent } from 'astro:transitions/client';
 import type { DotsDirector } from './dots/DotsDirector';
-import { isCarnetPath, isExplorerPath, nextFrame, pointBudget, supportsWebGL, wait } from './lib';
+import { isCarnetPath, isExplorerPath, nextFrame, pointBudget, prefersReducedMotion, supportsWebGL, wait } from './lib';
 import { Explorer } from './site/Explorer';
 import { ArticlePage, CarnetPage, Menu } from './site/Pages';
 
@@ -41,6 +41,8 @@ class Site {
   private keepY: number | null = null;
   /** Envol des points en cours (bascule vers Lire), qui continue après le changement de page. */
   private flight: Promise<void> | null = null;
+  /** Arrivée directe sur une page Lire : afficher la poussière en suspens dès que WebGL est prêt. */
+  private suspendOnLoad = false;
   private readonly html = document.documentElement;
 
   start(): void {
@@ -93,7 +95,17 @@ class Site {
       // Sur l'Explorer, seul le pied de page est concerné (les sections ont SectionMotion).
       void this.startReveal(false);
       if (bascule === 'to-explorer') await this.introExplorer(this.explorer);
-      else this.bootExplorer(this.explorer);
+      else {
+        // Arrivée sans bascule (ex. depuis une étude de cas) : plus de poussière en suspens.
+        this.suspendOnLoad = false;
+        if (this.director?.suspended) {
+          this.director.suspended = null;
+          this.director.idle();
+          this.director.renderer.clear();
+        }
+        this.html.classList.remove('dots-suspended');
+        this.bootExplorer(this.explorer);
+      }
     } else {
       this.html.classList.remove('dots-ready');
       if (carnetRoot) this.page = new CarnetPage(carnetRoot);
@@ -107,12 +119,19 @@ class Site {
         this.director?.attachStage(null);
         this.director?.idle();
         this.director?.renderer.clear();
+        this.suspendOnLoad = true;
       }
       // Arrivée directe sur une page Lire : on précharge en tâche de fond ce dont le retour
       // vers l'Explorer aura besoin (three.js, GSAP), pour que la bascule démarre au clic.
       const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
       const warm = (): void => {
-        void this.getDirector();
+        void this.getDirector().then((d) => {
+          // Arrivée directe : la poussière de points apparaît doucement, en suspens.
+          if (!d || !this.suspendOnLoad || !document.querySelector('[data-carnet], [data-article]')) return;
+          this.suspendOnLoad = false;
+          this.html.classList.add('dots-suspended');
+          void d.suspend(1400, d.library.at(0));
+        });
         void import('./site/PageMotion');
       };
       if (ric) ric(warm, { timeout: 3000 });
@@ -179,7 +198,11 @@ class Site {
     // (le script inline qui remplace no-js → js ne se rejoue pas lors d'une navigation client).
     const root = e.newDocument.documentElement;
     root.classList.replace('no-js', 'js');
-    for (const c of ['no-webgl', 'dots-ready', 'dots-busy']) if (this.html.classList.contains(c)) root.classList.add(c);
+    for (const c of ['no-webgl', 'dots-ready', 'dots-busy', 'dots-suspended']) if (this.html.classList.contains(c)) root.classList.add(c);
+    // Retour vers l'Explorer avec WebGL : la forme statique (image de secours) ne doit pas
+    // apparaître le temps que les points prennent le relais.
+    // (labels-wait : les étiquettes de la forme attendent que les points soient rassemblés.)
+    if (this.bascule === 'to-explorer' && this.director) root.classList.add('dots-returning', 'labels-wait');
     if (this.bascule === 'filter') root.classList.add('is-refiltering');
     else if (this.bascule) root.classList.add('is-arriving');
   }
@@ -226,7 +249,8 @@ class Site {
     if (d && this.explorer) {
       // La scène va quitter le DOM : on la détache (sinon l'observateur de visibilité coupe la boucle).
       d.attachStage(null);
-      this.flight = d.scatter(1400);
+      // Les points explosent puis restent en suspens, très pâles, dans la page Lire.
+      this.flight = d.suspend(1600);
     }
     await wait(350);
   }
@@ -239,11 +263,7 @@ class Site {
     this.html.classList.remove('is-arriving');
     await Promise.all([root && motion ? motion.enterPage(root) : Promise.resolve(), this.flight ?? Promise.resolve()]);
     this.flight = null;
-    const d = this.director;
-    d?.attachStage(null);
-    d?.idle();
-    if (d) d.renderer.fade = 0;
-    d?.renderer.clear();
+    if (this.director?.suspended) this.html.classList.add('dots-suspended');
     this.html.classList.remove('dots-busy');
   }
 
@@ -252,6 +272,7 @@ class Site {
     const root = document.querySelector<HTMLElement>('[data-carnet], [data-article]');
     const [motion] = await Promise.all([import('./site/PageMotion'), this.getDirector()]);
     this.html.classList.add('is-leaving');
+    // La poussière en suspens continue de flotter : c'est elle qui formera la section.
     if (root) await motion.exitPage(root);
     else await wait(300);
   }
@@ -266,16 +287,37 @@ class Site {
     explorer.timeline.measure();
     const d = this.director;
     if (!d) {
-      this.html.classList.remove('is-arriving');
+      this.html.classList.remove('is-arriving', 'dots-returning', 'labels-wait');
       return;
     }
-    d.attachStage(explorer.stage);
     this.html.classList.add('dots-ready', 'dots-busy');
+    this.html.classList.remove('dots-suspended');
     const target = Math.round(explorer.timeline.valueAt(window.scrollY));
     this.html.classList.remove('is-arriving');
-    await d.gather(d.library.at(target), 1300);
+    // Les mêmes points : la poussière en suspens se rassemble (sinon, arrivée de partout).
+    // dots-ready masque désormais l'image de secours (avec son propre fondu) : on retire la classe de retour.
+    this.html.classList.remove('dots-returning');
+    if (d.suspended) await d.reform(explorer.stage, d.library.at(target), 1500);
+    else {
+      d.attachStage(explorer.stage);
+      await d.gather(d.library.at(target), 1300);
+    }
     this.html.classList.remove('dots-busy');
+    this.revealLabels(explorer);
     if (this.explorer === explorer) explorer.attach(d, target);
+  }
+
+  /** Les étiquettes (années, légendes) apparaissent en fondu, en cascade, une fois la forme posée. */
+  private revealLabels(explorer: Explorer): void {
+    this.html.classList.remove('labels-wait');
+    if (prefersReducedMotion()) return;
+    const labels = explorer.stage.querySelectorAll<HTMLElement>('[data-labels-for]:not([hidden]) :is(.stage__label, .stage__leader)');
+    labels.forEach((el, k) =>
+      el.animate(
+        [{ opacity: 0, filter: 'blur(4px)', translate: '0 6px' }, { opacity: 1, filter: 'blur(0)', translate: '0 0' }],
+        { duration: 600, delay: k * 70, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'backwards' },
+      ),
+    );
   }
 }
 

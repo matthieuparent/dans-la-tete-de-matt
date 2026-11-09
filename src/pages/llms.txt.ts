@@ -10,7 +10,7 @@ export const GET: APIRoute = async ({ site }) => {
   const notes = await getNotes();
   const u = (p: string): string => new URL(p, site).href;
   const lines = [
-    '# Dans la tête de Matt — Matthieu Parent',
+    '# Dans la tête de Matt · Matthieu Parent',
     '',
     `> ${PROFILE.name} est ${PROFILE.role.toLowerCase()}. ${PROFILE.tagline}`,
     '',

@@ -3,11 +3,13 @@
  * Les valeurs entre crochets sont à fournir par Matthieu (voir docs/fiche-de-passation.md).
  */
 
-export const SHAPE_IDS = ['intro', 'projets', 'enseignement', 'jeu', 'ia', 'famille', 'carnet'] as const;
+import { PROJETS } from './projets';
+
+export const SHAPE_IDS = ['intro', 'projets', 'enseignement', 'recharge', 'ia', 'famille', 'carnet'] as const;
 export type ShapeId = (typeof SHAPE_IDS)[number];
 
 /** Sections qui ont une rubrique dans le Carnet (filtres). */
-export const CARNET_SECTIONS = ['projets', 'enseignement', 'jeu', 'ia', 'famille'] as const;
+export const CARNET_SECTIONS = ['projets', 'enseignement', 'recharge', 'ia', 'famille'] as const;
 export type CarnetSection = (typeof CARNET_SECTIONS)[number];
 
 export interface SectionInfo {
@@ -36,6 +38,28 @@ export const PROFILE = {
   sameAs: [] as string[], // TODO(Matthieu) : GitHub, LinkedIn, etc. (utilisé dans le JSON-LD)
 } as const;
 
+/** Projets réels (année connue) : les entrées génériques « [AAAA] » ne comptent pas. */
+const VRAIS_PROJETS = PROJETS.filter((p) => /^\d{4}$/.test(p.year));
+const PREMIERE_ANNEE = Math.min(...VRAIS_PROJETS.map((p) => Number(p.year)));
+/** Année en cours (au moment du build). */
+const ANNEE = new Date().getFullYear();
+
+export const ENSEIGNEMENT = {
+  depuis: '2017',
+  /** Cours de la session en cours. */
+  session: ['Production Web', 'Conception Web 4'],
+  /** Affiché sur le tableau de la forme « Enseignement ». */
+  vedette: 'Production Web',
+  dejaEnseignes: [
+    'Conception Web 1 à 4',
+    'Production Web',
+    "Projet de fin d'études",
+    "Design d'interface (dépt. Informatique)",
+    'Programmation serveur et base de données (ancien Web 4)',
+    'Coordination des stages',
+  ] as string[],
+} as const;
+
 export const SECTIONS: readonly SectionInfo[] = [
   {
     id: 'intro',
@@ -60,12 +84,12 @@ export const SECTIONS: readonly SectionInfo[] = [
     title: 'Projets',
     text: 'Chaque noyau est un projet ; sa position sur la ligne dit son année.',
     rows: [
-      ['Période', '[AAAA] – 2026'],
-      ['Types', 'Web 3D, jeux, outils pédagogiques, IA'],
-      ['Sélection', '[n] projets'],
+      ['Période', `${PREMIERE_ANNEE} – ${ANNEE}`],
+      ['Types', 'WordPress, 3D, SCSS, front-end créatif, IA'],
+      ['Sélection', VRAIS_PROJETS.length > 1 ? `${VRAIS_PROJETS.length} projets` : `${VRAIS_PROJETS.length} projet`],
     ],
     hint: 'Survolez ou touchez un noyau pour ouvrir le projet',
-    shapeLabel: 'Seize noyaux de points reliés par une ligne de temps, un par projet',
+    shapeLabel: `${PROJETS.length} noyaux de points reliés par une ligne de temps, un par projet`,
   },
   {
     id: 'enseignement',
@@ -74,23 +98,25 @@ export const SECTIONS: readonly SectionInfo[] = [
     title: 'Enseigne&shy;ment',
     text: "J'enseigne la programmation [niveau, établissement]. Ce que j'essaie de transmettre : [une phrase].",
     rows: [
-      ['Depuis', '[AAAA]'],
-      ['Cours', '[Cours 1] · [Cours 2] · [Cours 3]'],
-      ['Étudiants', '[n] par année'],
+      ['Depuis', ENSEIGNEMENT.depuis],
+      ['Cette session', ENSEIGNEMENT.session.join(' · ')],
+      ['Cours déjà enseignés', ENSEIGNEMENT.dejaEnseignes.length ? ENSEIGNEMENT.dejaEnseignes : '[liste à venir]'],
     ],
     hint: 'Le tableau affiche le cours en vedette',
     shapeLabel: 'Les points forment un tableau de classe et trois rangées de pupitres',
   },
   {
-    id: 'jeu',
+    id: 'recharge',
     num: '03',
-    label: 'Jeu',
-    title: 'Jeu',
-    text: 'Ce que je joue, et ce que je construis pour jouer.',
+    label: 'Recharge',
+    title: 'Recharge',
+    text: "Au rythme de l'IA, de la famille et des agendas remplis, voici ce qui me permet de recharger les neurones.",
     rows: [
-      ['En ce moment', '[jeu]'],
-      ['De toujours', '[jeu]'],
-      ['Game jams', '[n] participations'],
+      ['Jeux vidéo', ['Final Fantasy Resonance', 'NHL 26']],
+      ['Anime et manga', ['Golden Kamui', 'Black Clover']],
+      ['Jeux de société', ['Azul', 'Cascadia', 'Century']],
+      ['Sport joué', ['Balle molle', 'Volleyball']],
+      ['Télé', ['Canadiens', 'Real Madrid', 'The Rings of Power']],
     ],
     hint: 'Les boutons surlignés lanceront bientôt une démo jouable',
     shapeLabel: "Les points forment la silhouette d'une console portable",
@@ -100,11 +126,11 @@ export const SECTIONS: readonly SectionInfo[] = [
     num: '04',
     label: 'IA',
     title: 'IA',
-    text: "Comment je l'utilise, comment je l'enseigne, et où je la questionne.",
+    text: "On ne peut plus se mettre la tête dans le sable : l'IA est là pour rester. Voici comment je l'utilise.",
     rows: [
-      ['Outils', '[outils utilisés]'],
-      ['En classe', "[place de l'IA dans mes cours]"],
-      ['Position', '[une phrase]'],
+      ['Outils', ['Claude Code', 'Codex', 'Figma Make']],
+      ['Niveau', 'En apprentissage'],
+      ['Position', "On ne sait pas où on s'en va : à nous d'aller quelque part de plaisant."],
     ],
     hint: 'Un chemin s’active de la question à la réponse',
     shapeLabel: 'Les points forment un réseau de neurones artificiels à cinq couches',
@@ -114,10 +140,10 @@ export const SECTIONS: readonly SectionInfo[] = [
     num: '05',
     label: 'Famille',
     title: 'Famille',
-    text: 'Trois enfants : un garçon de 12 ans, deux filles de 6 et 2 ans. Pas de visages, pas de noms.',
+    text: 'Trois enfants : un garçon de 12 ans, deux filles de 6 et 2 ans. Une montagne russe d’émotions.',
     rows: [
-      ['Au quotidien', '[une phrase]'],
-      ['Ce que ça change', '[en classe, dans le code]'],
+      ['Au quotidien', ['Organisation', 'Terrain de soccer', 'Infériorité numérique']],
+      ['Ce que ça change', ['Rigueur', 'Passion', 'Envie de se dépasser']],
     ],
     hint: '',
     shapeLabel: 'Cinq silhouettes en points, reliées par un fil',
@@ -127,7 +153,7 @@ export const SECTIONS: readonly SectionInfo[] = [
     num: '06',
     label: 'Carnet',
     title: 'Carnet',
-    text: "Making-of, notes de cours, parties, essais sur l'IA et vie de famille. Les points s'alignent : place à la lecture.",
+    text: "Il se passe plusieurs choses dans ma tête, et j'ai décidé de commencer à les mettre par écrit. Je vais parler de plein de sujets différents : à vous de voir ce qui vous intéresse.",
     rows: [],
     hint: '',
     shapeLabel: 'Les points s’alignent en lignes de texte',
