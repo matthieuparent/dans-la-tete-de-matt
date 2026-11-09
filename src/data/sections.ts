@@ -39,7 +39,11 @@ export const PROFILE = {
   tagline: "Je construis des expériences web et j'enseigne à les construire. Ce qui se passe entre les deux est ici.",
   // Courriel découpé : il n'apparaît jamais en clair dans le HTML (voir Footer.astro).
   email: { user: 'matthieuparent', domain: 'outlook.com' },
-  sameAs: [] as string[], // TODO(Matthieu) : GitHub, LinkedIn, etc. (utilisé dans le JSON-LD)
+  /** Profils officiels : liens visibles du pied de page (rel="me") et `sameAs` du JSON-LD. */
+  profiles: [
+    { label: 'LinkedIn', url: 'https://www.linkedin.com/in/matthieuparent/' },
+    { label: 'GitHub', url: 'https://github.com/matthieuparent' },
+  ],
 } as const;
 
 /** Projets réels (année connue) : les entrées génériques « [AAAA] » ne comptent pas. */

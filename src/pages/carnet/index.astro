@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import CarnetView from '../../components/CarnetView.astro';
 import { getCarnetItems, getNotes, noteUrl } from '../../lib/carnet';
-import { breadcrumbs, graph, personId, website } from '../../lib/seo';
+import { breadcrumbs, graph, personRef, website } from '../../lib/seo';
 
 const site = Astro.site ?? new URL(Astro.url.origin);
 const notes = await getNotes();
@@ -17,7 +17,7 @@ const jsonLd = graph(
     name: 'Carnet de Matt',
     description,
     inLanguage: 'fr-CA',
-    author: { '@id': personId(site) },
+    author: personRef(site),
     blogPost: notes.map((n) => ({ '@type': 'BlogPosting', headline: n.data.title, url: new URL(noteUrl(n), site).href, datePublished: n.data.date.toISOString() })),
   },
   breadcrumbs(site, [['Accueil', '/'], ['Carnet', '/carnet']]),

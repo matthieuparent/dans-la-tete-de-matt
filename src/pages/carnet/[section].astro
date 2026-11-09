@@ -4,7 +4,7 @@ import Base from '../../layouts/Base.astro';
 import CarnetView from '../../components/CarnetView.astro';
 import { CARNET_SECTIONS, sectionById, plain, type CarnetSection } from '../../data/sections';
 import { getCarnetItems, getNotes, noteUrl } from '../../lib/carnet';
-import { breadcrumbs, graph, personId, website } from '../../lib/seo';
+import { breadcrumbs, graph, personRef, website } from '../../lib/seo';
 
 export const getStaticPaths = (() => CARNET_SECTIONS.map((section) => ({ params: { section } }))) satisfies GetStaticPaths;
 
@@ -24,7 +24,7 @@ const jsonLd = graph(
     name: `Carnet · ${label}`,
     description,
     inLanguage: 'fr-CA',
-    author: { '@id': personId(site) },
+    author: personRef(site),
     isPartOf: { '@id': new URL('/carnet#blog', site).href },
     hasPart: [
       ...notes.map((n) => ({ '@type': 'BlogPosting', headline: n.data.title, url: new URL(noteUrl(n), site).href })),

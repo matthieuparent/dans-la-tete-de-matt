@@ -18,6 +18,9 @@ const fallback = `${user} [arobase] ${domain.replace(/\./g, ' [point] ')}`;
       <h2 id="f-contact" class="eyebrow">Contact</h2>
       <p>{PROFILE.status}</p>
       <p><a class="sweep js-mail" href="#contact" data-u={rev(user)} data-d={rev(domain)}>{fallback}</a></p>
+      <ul role="list">
+        {PROFILE.profiles.map((p) => <li><a class="sweep" href={p.url} rel="me noopener" target="_blank">{p.label}<span class="sr-only"> (nouvel onglet)</span></a></li>)}
+      </ul>
     </section>
     <nav aria-labelledby="f-nav">
       <h2 id="f-nav" class="eyebrow">Explorer</h2>

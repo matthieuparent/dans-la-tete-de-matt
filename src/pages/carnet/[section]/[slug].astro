@@ -4,7 +4,7 @@ import { render } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import { sectionById } from '../../../data/sections';
 import { formatDate, getNotes, noteUrl, readingMinutes, type Note } from '../../../lib/carnet';
-import { breadcrumbs, graph, personId, website } from '../../../lib/seo';
+import { breadcrumbs, graph, personRef, website } from '../../../lib/seo';
 import Note_ from '../../../components/mdx/Note.astro';
 import Quote from '../../../components/mdx/Quote.astro';
 import BrainDemo from '../../../components/mdx/BrainDemo.astro';
@@ -50,8 +50,8 @@ const jsonLd = graph(
     datePublished: note.data.date.toISOString(),
     dateModified: (note.data.updated ?? note.data.date).toISOString(),
     inLanguage: 'fr-CA',
-    author: { '@id': personId(site) },
-    publisher: { '@id': personId(site) },
+    author: personRef(site),
+    publisher: personRef(site),
     articleSection: info.label,
     timeRequired: `PT${minutes}M`,
     isPartOf: { '@id': new URL('/carnet#blog', site).href },

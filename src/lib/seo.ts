@@ -35,9 +35,16 @@ export function person(site: URL): JsonLd {
       'Intelligence artificielle',
       'Conception de jeux',
     ],
-    ...(PROFILE.sameAs.length ? { sameAs: PROFILE.sameAs } : {}),
+    sameAs: PROFILE.profiles.map((p) => p.url),
   };
 }
+
+/**
+ * Auteur ou éditeur d'une page : référence au nœud Person (@id) avec son type, son nom et son URL.
+ * Les pages autres que l'accueil n'incluent pas le nœud Person complet : sans ces champs,
+ * Google n'y voit qu'un « Thing » anonyme.
+ */
+export const personRef = (site: URL): JsonLd => ({ '@type': 'Person', '@id': personId(site), name: PROFILE.name, url: new URL('/', site).href });
 
 export function website(site: URL): JsonLd {
   return {
@@ -46,8 +53,8 @@ export function website(site: URL): JsonLd {
     url: new URL('/', site).href,
     name: SITE_NAME,
     inLanguage: LOCALE,
-    author: { '@id': personId(site) },
-    publisher: { '@id': personId(site) },
+    author: personRef(site),
+    publisher: personRef(site),
   };
 }
 

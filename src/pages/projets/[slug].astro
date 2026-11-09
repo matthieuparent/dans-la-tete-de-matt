@@ -3,7 +3,7 @@ import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
 import { ETUDES, type Etude } from '../../data/etudes';
 import type { Projet } from '../../data/projets';
-import { breadcrumbs, graph, personId, website } from '../../lib/seo';
+import { breadcrumbs, graph, personRef, website } from '../../lib/seo';
 
 export const getStaticPaths = (() =>
   ETUDES.map(({ projet, etude }) => ({ params: { slug: etude.slug }, props: { projet, etude } }))) satisfies GetStaticPaths;
@@ -32,7 +32,7 @@ const jsonLd = graph(
     image: new URL(etude.og, site).href,
     inLanguage: 'fr-CA',
     dateCreated: /^\d{4}$/.test(projet.year) ? projet.year : undefined,
-    author: { '@id': personId(site) },
+    author: personRef(site),
     sourceOrganization: { '@type': 'Organization', name: etude.client },
     ...(projet.live && !archive ? { about: { '@type': 'WebSite', name: projet.name, url: projet.live } } : {}),
     contributor: etude.credits
