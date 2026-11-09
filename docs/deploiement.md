@@ -11,8 +11,15 @@ redémarrage, le serveur revient tout seul à la version précédente.
 ## Sur le serveur (droplet DigitalOcean, Ubuntu 24.04)
 
 ```
-Internet ─▶ Apache (80/443, HTTPS Let's Encrypt) ─▶ Node 24 sur 127.0.0.1:4321 (service `portfolio`)
+Internet ─▶ Apache (80/443, HTTPS Let's Encrypt)
+              ├─ pages statiques : lues directement dans /srv/portfolio/app/dist/client
+              └─ /api/*          ─▶ Node 24 sur 127.0.0.1:4321 (service `portfolio`)
 ```
+
+Apache sert les pages lui-même (`/carnet` → `carnet.html`) : le serveur statique de
+`@astrojs/node` ne gère pas une page et un dossier du même nom (`carnet.html` + `carnet/`).
+Copies de référence de la config du serveur : dossier [`deploy/`](../deploy/). Elles ne sont
+pas appliquées automatiquement : une modification se fait sur le serveur, puis on met la copie à jour.
 
 | Quoi | Où |
 | --- | --- |

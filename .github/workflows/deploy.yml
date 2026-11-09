@@ -47,7 +47,7 @@ jobs:
         run: |
           RELEASE="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
           echo "RELEASE=$RELEASE" >> "$GITHUB_ENV"
-          rsync -az --mkpath dist package.json package-lock.json scripts/deploy-remote.sh \
+          rsync -az --mkpath dist package.json package-lock.json deploy/deploy-remote.sh \
             "prod:/srv/portfolio/releases/$RELEASE/"
 
       - name: Activer la version
@@ -56,4 +56,5 @@ jobs:
       - name: Vérifier le site public
         run: |
           curl -fsS -o /dev/null -w 'Accueil : %{http_code}\n' https://matthieuparent.com/
+          curl -fsS -o /dev/null -w 'Carnet : %{http_code}\n' https://matthieuparent.com/carnet
           curl -fsS -w '\n' https://matthieuparent.com/api/status
