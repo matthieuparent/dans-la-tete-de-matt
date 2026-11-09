@@ -17,13 +17,15 @@ const site = Astro.site ?? new URL(Astro.url.origin);
 const url = new URL(`/projets/${etude.slug}`, site).href;
 const sections = etude.moments;
 const description = projet.summary;
+/** Site qui n'existe plus : lien vers sa version archivée (Wayback Machine). */
+const archive = projet.live ? new URL(projet.live).host === 'web.archive.org' : false;
 
 const jsonLd = graph(
   website(site),
   {
     '@type': 'CreativeWork',
     '@id': `${url}#etude`,
-    name: `${projet.name} — étude de cas`,
+    name: `${projet.name} · étude de cas`,
     headline: projet.name,
     description,
     url,
@@ -32,7 +34,7 @@ const jsonLd = graph(
     dateCreated: /^\d{4}$/.test(projet.year) ? projet.year : undefined,
     author: { '@id': personId(site) },
     sourceOrganization: { '@type': 'Organization', name: etude.client },
-    ...(projet.live ? { about: { '@type': 'WebSite', name: projet.name, url: projet.live } } : {}),
+    ...(projet.live && !archive ? { about: { '@type': 'WebSite', name: projet.name, url: projet.live } } : {}),
     contributor: etude.credits
       .filter((c) => c.role !== 'Client')
       .flatMap((c) => c.names.filter((n) => !n.startsWith('[')).map((n) => ({ '@type': 'Person', name: n, jobTitle: c.role }))),
@@ -41,7 +43,7 @@ const jsonLd = graph(
 );
 ---
 
-<Base title={`${projet.name} — étude de cas`} {description} mode="lire" section="projets" type="article" {jsonLd} image={etude.og}>
+<Base title={`${projet.name} · étude de cas`} {description} mode="lire" section="projets" type="article" {jsonLd} image={etude.og}>
   <main id="contenu" class="article case" data-article>
     <div class="progress" data-progress role="progressbar" aria-label="Progression de lecture" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
     <header class="article__head">
@@ -66,7 +68,7 @@ const jsonLd = graph(
       <div><dt>Mon rôle</dt><dd>{etude.role}</dd></div>
       <div><dt>Techno</dt><dd>{projet.tech}</dd></div>
       {projet.live && (
-        <div><dt>En ligne</dt><dd><a class="sweep" href={projet.live} rel="external noopener" target="_blank">{new URL(projet.live).host}<span class="sr-only"> (nouvel onglet)</span> ↗</a></dd></div>
+        <div><dt>{archive ? 'Archive' : 'En ligne'}</dt><dd><a class="sweep" href={projet.live} rel="external noopener" target="_blank">{archive ? 'Wayback Machine' : new URL(projet.live).host}<span class="sr-only"> (nouvel onglet)</span> ↗</a></dd></div>
       )}
     </dl>
 
@@ -104,6 +106,16 @@ const jsonLd = graph(
                   ))}
                 </div>
                 <figcaption>{m.blueprint.caption}</figcaption>
+              </figure>
+            )}
+            {m.video && (
+              <figure class="case__video">
+                <a class="case__video-play" href={`https://www.youtube.com/watch?v=${m.video.youtubeId}`} data-youtube={m.video.youtubeId} data-title={m.video.title}>
+                  <img src={m.video.poster} alt="" width="1280" height="720" loading="lazy" decoding="async" />
+                  <span class="case__video-btn" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28"><path d="M9 6l14 8-14 8z" fill="currentColor" /></svg></span>
+                  <span class="sr-only">Lire la vidéo « {m.video.title} »</span>
+                </a>
+                {m.video.caption && <figcaption>{m.video.caption}</figcaption>}
               </figure>
             )}
             {m.code && (
@@ -146,8 +158,25 @@ const jsonLd = graph(
     </div>
 
     <footer class="article__foot">
-      {projet.live && <a class="button" href={projet.live} rel="external noopener" target="_blank">Visiter {new URL(projet.live).host} ↗</a>}
+      {projet.live && <a class="button" href={projet.live} rel="external noopener" target="_blank">{archive ? 'Voir la version archivée' : `Visiter ${new URL(projet.live).host}`} ↗</a>}
       <a class="back-link sweep" href="/#projets">← Revenir aux projets</a>
     </footer>
   </main>
 </Base>
+
+<script>
+  // Vidéo YouTube chargée seulement au clic : aucune requête vers YouTube avant.
+  document.addEventListener('click', (e) => {
+    const link = (e.target as Element).closest<HTMLAnchorElement>('a[data-youtube]');
+    if (!link || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault();
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube-nocookie.com/embed/${link.dataset.youtube}?autoplay=1&rel=0`;
+    iframe.title = link.dataset.title ?? 'Vidéo';
+    iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+    iframe.allowFullscreen = true;
+    iframe.className = 'case__video-frame';
+    link.replaceWith(iframe);
+    iframe.focus();
+  });
+</script>

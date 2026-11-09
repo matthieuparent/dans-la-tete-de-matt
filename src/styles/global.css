@@ -1,5 +1,5 @@
 /*
- * Dans la tête de Matt — feuille de style unique.
+ * Dans la tête de Matt : feuille de style unique.
  * Couches : reset < tokens < base < layout < components < pages < states.
  * Palette stricte (fiche de passation) : aucune autre couleur.
  */
@@ -154,8 +154,11 @@
     pointer-events: none;
   }
   .no-webgl .dots-canvas, .no-js .dots-canvas { display: none; }
-  /* Hors Explorer, le canvas n'est visible que pendant une bascule (aucun reste de forme). */
-  .js:not(.dots-ready):not(.dots-busy) .dots-canvas { visibility: hidden; }
+  /* Hors Explorer, le canvas n'est visible que pendant une bascule, ou pour la poussière en suspens. */
+  .js:not(.dots-ready):not(.dots-busy):not(.dots-suspended) .dots-canvas { visibility: hidden; }
+  /* Pages Lire : la poussière passe DERRIÈRE le contenu (les cartes et images la masquent). */
+  .dots-suspended:not(.dots-busy) .dots-canvas { z-index: 0; }
+  .dots-suspended:not(.dots-busy) #contenu { position: relative; z-index: 1; }
 
   .site-header {
     position: sticky;
@@ -203,17 +206,21 @@
     line-height: 1.4;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(4px);
-    transition: opacity .18s, transform .18s, visibility .18s;
     pointer-events: none;
+    /* Même ouverture que la boîte du statut : un rabat qui pivote. La boîte est AU-DESSUS du
+       texte, elle pivote donc depuis son bord bas (elle se lève au lieu de tomber). */
+    transform-origin: 50% 100%;
+    transform: perspective(600px) rotateX(80deg);
+    transition: transform 0.25s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.2s ease 0.05s, visibility 0s linear 0.25s;
   }
   .legal-note:hover .legal-note__tip,
   .legal-note:focus-visible .legal-note__tip {
     opacity: 1;
     visibility: visible;
-    transform: none;
+    transform: perspective(600px) rotateX(0deg);
+    transition: transform 0.55s cubic-bezier(0.34, 1.45, 0.64, 1), opacity 0.2s ease, visibility 0s;
   }
-  @media (prefers-reduced-motion: reduce) { .legal-note__tip { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .legal-note__tip { transition: none; transform: none; } }
   @media (max-width: 899px) {
     .site-footer { grid-template-columns: 1fr; padding-bottom: 96px; }
     .site-footer__cols { grid-template-columns: 1fr 1fr; }
@@ -316,6 +323,8 @@
     transition: box-shadow 180ms var(--sweep-ease), transform 180ms var(--sweep-ease);
   }
   .button:hover, .button:focus-visible { box-shadow: 6px 6px 0 var(--hl); transform: translate(-2px, -2px); }
+  .button--ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .button--ghost:hover, .button--ghost:focus-visible { background: var(--bg); box-shadow: inset 0 0 0 1px var(--ink), 6px 6px 0 var(--hl); }
 
   .back-link { font-size: 15px; font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; align-self: flex-start; }
 
@@ -414,6 +423,9 @@
   .stage__poster { object-fit: contain; transition: opacity 200ms; }
   .stage__poster.is-swapping { opacity: 0; }
   .dots-ready .stage__poster { opacity: 0; transition: opacity 0.6s; }
+  /* Retour vers l'Explorer : l'image de secours ne s'affiche pas le temps que les points arrivent. */
+  .dots-returning .stage__poster { opacity: 0; transition: none; }
+  .labels-wait .stage__labels { opacity: 0 !important; transition: none; }
   .stage__labels { pointer-events: none; font-size: 13px; transition: opacity 120ms linear; }
   .stage__label { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -78%); white-space: nowrap; }
   .stage__label.is-start { transform: translate(0, -78%); }
@@ -451,7 +463,7 @@
   }
   .sec__body > h2 { font-size: clamp(56px, 8.4vw, 124px); }
   .sec__text { font-size: 18px; line-height: 1.5; text-wrap: pretty; max-width: 440px; }
-  .sec__body > :is(.sec__hint, .sec__more, details, .latest, .button) { max-width: 440px; }
+  .sec__body > :is(.sec__hint, .sec__actions, details, .latest, .button) { max-width: 440px; }
   /* Le panneau survole la forme sans bloquer le survol des noyaux : seuls les liens,
      boutons et blocs de texte captent le pointeur. */
   .sec__body { pointer-events: none; }
@@ -459,8 +471,8 @@
   .sec__body .facts { max-width: none; }
   .sec__hint { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); margin-top: 12px; }
   /* Le lien garde sa propre largeur : le surligneur ne balaie que le lien, pas la ligne. */
-  .sec__more { margin-top: -8px; }
-  .sec__more a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; font-size: 14px; }
+  /* « Voir le dernier » (plein) puis « Voir les notes » (contour), côte à côte. */
+  .sec__actions { display: flex; flex-wrap: wrap; gap: 12px; }
   .sec__figure { display: none; }
   .sec--carnet { min-height: 75svh; }
 
@@ -486,20 +498,6 @@
     gap: 22px;
   }
 
-  .project-list summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; font-size: 15px; }
-  .project-list ol { display: grid; border-top: 1px solid var(--rule-2); }
-  .project-list button {
-    width: 100%;
-    min-height: 44px;
-    text-align: left;
-    border: 0;
-    border-bottom: 1px solid var(--rule-2);
-    background: transparent;
-    font-size: 15px;
-    padding: 0;
-  }
-  .project-list button:hover { background: var(--hl); }
-  .project-list__year { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; margin-right: 8px; }
 
   .latest { display: grid; border-top: 1px solid var(--rule-2); }
   .latest li { display: grid; grid-template-columns: 100px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--rule-2); align-items: baseline; }
@@ -596,6 +594,35 @@
   .project-card__actions { display: flex; justify-content: space-between; align-items: center; }
   .project-card__actions a, .project-card__actions button { min-height: 44px; display: inline-flex; align-items: center; font-size: 14px; font-weight: 600; }
   .project-card__actions button { border: 0; background: transparent; padding: 0 0 0 12px; color: var(--muted); font-weight: 500; }
+  /* Souris : la fiche est un aperçu. On clique le noyau, pas la fiche ; la souris la traverse. */
+  .project-card__hint { display: none; font-size: 13px; font-weight: 600; padding: 4px 0 10px; }
+  .project-card__hint::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--hl); box-shadow: 0 0 0 1px var(--ink); vertical-align: 1px; }
+  .project-card.is-preview { pointer-events: none; cursor: default; }
+  .project-card.is-preview .project-card__actions { display: none; }
+  .project-card.is-preview .project-card__hint { display: block; }
+  .project-card.is-preview.is-placeholder .project-card__hint { color: var(--muted); }
+  .project-card.is-preview.is-placeholder .project-card__hint::before { background: transparent; }
+  /* Fil entre le noyau survolé et la fiche. */
+  .project-leader {
+    position: fixed;
+    z-index: 8;
+    height: 1px;
+    background: var(--ink);
+    pointer-events: none;
+  }
+  .project-leader::after {
+    content: '';
+    position: absolute;
+    top: -2.5px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+  /* Le point au bout du fil touche la fiche. */
+  .project-leader::after { right: -3px; }
+  .project-leader.is-left::after { right: auto; left: -3px; }
+  @media (max-width: 899px) { .project-leader { display: none; } }
 
   /* Titres découpés (split.ts) : chaque mot est un masque, les lettres y montent. */
   .split-word {
@@ -688,7 +715,12 @@
       box-shadow: 0 -12px 0 rgb(22 36 28 / 0.18);
       padding-bottom: env(safe-area-inset-bottom);
     }
-    .project-card__media { aspect-ratio: 16 / 9; margin: 12px 16px 0; border: 1px solid rgb(22 36 28 / 0.35); }
+    /* Panneau compact : la forme (et les autres noyaux) reste visible au-dessus. */
+    .project-card__media { aspect-ratio: auto; height: clamp(96px, 16svh, 150px); margin: 12px 16px 0; border: 1px solid rgb(22 36 28 / 0.35); }
+    .project-card__body { padding: 12px 16px 4px; gap: 6px; }
+    .project-card__name { font-size: 26px; }
+    .project-card__summary { font-size: 14px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .project-card [data-card-tech] { display: none; }
   }
 
   /* ------------------------------ Carnet ------------------------------ */
@@ -710,9 +742,7 @@
     background: var(--bg);
     border-top: 1px solid var(--ink);
     border-bottom: 1px solid var(--ink);
-    transition: transform 220ms var(--sweep-ease);
   }
-  .filters.is-hidden { transform: translateY(calc(-100% - var(--header-h))); }
   .filters ul { display: flex; overflow-x: auto; scrollbar-width: none; }
   .filters li { flex: none; }
   .filters a {
@@ -743,7 +773,8 @@
     grid-template-columns: minmax(260px, 380px) minmax(0, 1fr);
     column-gap: 76px;
     padding-top: 8px;
-    scroll-margin-top: var(--header-h);
+    /* Ancre #liste : sous l'en-tête ET la barre de filtres collée. */
+    scroll-margin-top: calc(var(--header-h) + 58px);
   }
   .carnet__chapter {
     grid-column: 1;
@@ -807,6 +838,43 @@
   [data-view='list'] .note__media { display: none; }
   [data-view='list'] .note__meta { flex-direction: column; gap: 0; }
   [data-view='list'] .note-list { border-top: 1px solid var(--ink); }
+  /* Toute la ligne est cliquable (le lien du titre s'étend) ; au survol, un léger fond surligneur
+     glisse depuis la gauche et le titre se souligne (balayage .sweep). */
+  [data-view='list'] .note { position: relative; isolation: isolate; }
+  [data-view='list'] .note__title a::after { content: ''; position: absolute; inset: 0; z-index: 1; }
+  [data-view='list'] .note::before {
+    content: '';
+    position: absolute;
+    inset: 0 calc(-1 * 12px);
+    z-index: -1;
+    background: color-mix(in oklab, var(--hl) 22%, transparent);
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 420ms var(--sweep-ease);
+  }
+  [data-view='list'] .note:has(a:hover, a:focus-visible)::before { clip-path: inset(0 0 0 0); }
+  [data-view='list'] .note:has(a:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
+  [data-view='list'] .note__title a:focus-visible { outline: none; }
+  [data-view='list'] .note--avenir { cursor: default; }
+
+  /* Vignette qui suit la souris (mode liste, souris uniquement ; créée par NotesView). */
+  .note-peek {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    width: 300px;
+    pointer-events: none;
+    visibility: hidden;
+  }
+  .note-peek__inner.note__media {
+    height: auto;
+    aspect-ratio: 16 / 10;
+    border: 1px solid var(--ink);
+    background-color: var(--surface);
+    box-shadow: 8px 8px 0 var(--hl);
+  }
+  .note-peek__inner span { background: var(--surface); }
+  .note-peek.is-avenir .note-peek__inner { border-style: dashed; box-shadow: none; }
 
   /* Mode cartes */
   /* 3 cartes par rangée au maximum (2 sur écran moyen) : des vignettes plus généreuses. */
@@ -851,6 +919,11 @@
   [data-view='cards'] .note__section { justify-content: flex-start; margin-top: auto; }
   /* Toute la carte est cliquable (le lien du titre s'étend), sans changer le balisage. */
   [data-view='cards'] .note__title a::after { content: ''; position: absolute; inset: 0; }
+  /* À venir : annoncé, pas encore lisible. */
+  .note--avenir .note__meta span:last-child { background: var(--hl); color: var(--ink); padding: 0 6px; align-self: flex-start; }
+  .note--avenir .note__title { color: var(--muted); }
+  [data-view='cards'] .note--avenir { border-style: dashed; box-shadow: none; }
+  [data-view='cards'] .note--avenir .note__media { border-bottom-style: dashed; }
 
   @media (max-width: 899px) {
     .carnet__band { flex-direction: column; align-items: flex-start; gap: 16px; padding-top: 24px; }
@@ -894,6 +967,29 @@
   .article__byline a { color: var(--ink); }
 
   .article__layout { padding-top: 56px; }
+
+  /* Bureau : une seule grille pour toute la page, le sommaire monte sous le lien de retour
+     (au lieu d'attendre la fin de l'en-tête et de laisser un grand vide à gauche). */
+  @media (min-width: 900px) {
+    .article {
+      display: grid;
+      /* 4e colonne : le reste de la largeur (barre de progression, couverture pleine largeur). */
+      grid-template-columns: var(--article-cols, minmax(0, 376px) minmax(0, 680px) minmax(0, 176px) minmax(0, 1fr));
+      column-gap: 40px;
+      align-content: start;
+    }
+    .article__head, .article__layout { display: contents; }
+    .article > .progress { grid-column: 1 / -1; grid-row: 1; }
+    .article__head .back-link { grid-row: 2; margin-top: 40px; }
+    .article__title-block { grid-row: 2 / span 2; margin-top: 40px; }
+    .toc { grid-row: 3 / span 40; margin-top: 32px; }
+    .article > .article__foot { grid-column: 2 / span 2; }
+    /* Étude de cas : couverture et fiche en pleine largeur, le sommaire reprend sous elles. */
+    .article > :is(.case__cover, .case__facts) { grid-column: 1 / -1; }
+    .case .toc { grid-row: auto / span 40; margin-top: 56px; }
+    .article__layout > .prose { margin-top: 56px; }
+    .article > .article__foot { margin-left: 0; }
+  }
   .toc { grid-column: 1; align-self: start; position: sticky; top: calc(var(--header-h) + 40px); }
   .toc details { border-top: 1px solid var(--ink); }
   .toc summary { font-size: 13px; color: var(--muted); padding: 12px 0; list-style: none; cursor: default; }
@@ -1040,6 +1136,12 @@
   .case__facts dd { font-size: 16px; font-weight: 500; }
   .case__shot { margin: 1.8em -216px 2.2em 0; }
   .case__shot--narrow { margin-right: 0; max-width: 320px; }
+  .case__video { margin: 1.8em -216px 2.2em 0; }
+  .case__video-play, .case__video-frame { position: relative; display: block; aspect-ratio: 16 / 9; width: 100%; box-sizing: border-box; border: 1px solid var(--ink); box-shadow: 10px 10px 0 var(--hl); background: var(--ink); }
+  .case__video-play img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .case__video-btn { position: absolute; inset: 50% auto auto 50%; translate: -50% -50%; display: grid; place-items: center; width: 76px; height: 76px; border-radius: 50%; background: var(--hl); color: var(--ink); transition: scale .2s ease; }
+  .case__video-play:hover .case__video-btn, .case__video-play:focus-visible .case__video-btn { scale: 1.1; }
+  .case__video figcaption { margin-top: 14px; font-size: 14px; color: var(--muted); }
   .credits { display: grid; border-top: 1px solid var(--ink); }
   .credits > div {
     display: grid;
@@ -1117,7 +1219,7 @@
   .gallery figcaption { margin-top: 12px; }
 
   @media (max-width: 1199px) {
-    .case__shot, .case__code, .blueprint, .phones, .photo--wide { margin-right: 0; }
+    .case__shot, .case__video, .case__code, .blueprint, .phones, .photo--wide { margin-right: 0; }
   }
   @media (max-width: 899px) {
     .case__cover, .case__facts { margin: 24px 0 0; }
@@ -1132,8 +1234,7 @@
   }
 
   @media (max-width: 1199px) and (min-width: 900px) {
-    .article__head, .article__layout { grid-template-columns: minmax(0, 220px) minmax(0, 1fr) minmax(0, 176px); }
-    .article__foot { margin-left: calc(220px + 40px); }
+    .article { --article-cols: minmax(0, 220px) minmax(0, 1fr) minmax(0, 176px) 0px; }
   }
   @media (max-width: 899px) {
     .article__head, .article__layout { display: block; }
@@ -1167,7 +1268,8 @@
   }
 
   /* ---------- Statut dynamique « En train de… » (StatusLabel.astro / .ts) ---------- */
-  .stage__label.status { pointer-events: auto; white-space: nowrap; }
+  /* Au-dessus du canvas des points (z-index 5) : sa boîte de survol ne doit pas passer dessous. */
+  .stage__label.status { pointer-events: auto; white-space: nowrap; z-index: 6; }
   .status__trigger {
     display: inline-block;
     padding: 2px 0;
@@ -1186,35 +1288,54 @@
   }
   .status__text.is-entering { opacity: 0; translate: 0 0.5em; filter: blur(4px); }
   .status__text.is-leaving { opacity: 0; translate: 0 -0.5em; filter: blur(4px); }
-  /* Texte de survol : hors flux (aucun saut de mise en page), sous le texte visible et de la
-     même largeur ; le retrait de 1em le garde à droite de la ligne de rappel. */
+  /* Texte de survol : même boîte que la note du copyright (bloc encre, texte clair), hors flux
+     (aucun saut de mise en page). Le retrait de 1em la garde à droite de la ligne de rappel.
+     Ouverture : un léger flip 3D, la boîte pivote depuis son bord haut comme un rabat qui tombe. */
   .status__hover {
     position: absolute;
-    top: calc(100% + 6px);
+    top: calc(100% + 8px);
     left: 1em;
-    right: 0;
+    width: max-content;
+    max-width: min(320px, 60cqw);
+    padding: 8px 12px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 13px;
+    line-height: 1.4;
     white-space: normal;
     text-wrap: pretty;
-    color: var(--muted);
-    line-height: 1.4;
+    translate: var(--tx, 0) 0;
+    transform-origin: 50% 0;
+    transform: perspective(600px) rotateX(-80deg);
     opacity: 0;
-    translate: var(--tx, 0) -4px;
-    filter: blur(3px);
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.35s ease, translate 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+    /* Fermeture : rapide, sans rebond. */
+    transition: transform 0.25s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.2s ease 0.05s, visibility 0s linear 0.25s;
   }
   .status:is(.is-open, :has(.status__trigger:focus-visible)) .status__trigger { background-size: 100% 0.42em; }
-  .status:is(.is-open, :has(.status__trigger:focus-visible)) .status__hover { opacity: 1; translate: var(--tx, 0) 0; filter: none; }
+  .status:is(.is-open, :has(.status__trigger:focus-visible)) .status__hover {
+    transform: perspective(600px) rotateX(0deg);
+    opacity: 1;
+    visibility: visible;
+    /* Ouverture : le rabat tombe et dépasse à peine avant de se poser. */
+    transition: transform 0.55s cubic-bezier(0.34, 1.45, 0.64, 1), opacity 0.2s ease, visibility 0s;
+  }
   @media (hover: hover) {
     .status:hover .status__trigger { background-size: 100% 0.42em; }
-    .status:hover .status__hover { opacity: 1; translate: var(--tx, 0) 0; filter: none; }
+    .status:hover .status__hover {
+      transform: perspective(600px) rotateX(0deg);
+      opacity: 1;
+      visibility: visible;
+      transition: transform 0.55s cubic-bezier(0.34, 1.45, 0.64, 1), opacity 0.2s ease, visibility 0s;
+    }
   }
-  .status.is-dismissed .status__hover { opacity: 0 !important; }
+  .status.is-dismissed .status__hover { opacity: 0 !important; visibility: hidden !important; }
   .status__trigger:focus-visible { outline: none; }
   @media (prefers-reduced-motion: reduce) {
-    .status__trigger, .status__text, .status__hover { transition-duration: 0.01ms; }
+    .status__trigger, .status__text, .status__hover { transition-duration: 0.01ms !important; }
     .status__text.is-entering, .status__text.is-leaving { translate: none; filter: none; }
-    .status__hover { translate: var(--tx, 0) 0 !important; filter: none; }
+    .status__hover { transform: none !important; }
   }
   /* Mobile : pas de ligne de rappel ; le statut devient une ligne courte, centrée en haut. */
   @media (max-width: 899px) {
@@ -1227,6 +1348,11 @@
       font-size: 12px;
     }
     .status__hover { --tx: -50%; left: 50%; right: auto; width: max-content; max-width: min(32ch, 86cqw); text-align: center; }
+    /* La colonne collante de la forme (z-index 1) passe sous le canvas des points (5) : tant que la
+       boîte du statut est ouverte, elle remonte au-dessus, fond transparent (les points restent
+       visibles au travers, la boîte passe devant eux). */
+    .explorer__stage-col:has(.status:is(.is-open, :has(.status__trigger:focus-visible))) { z-index: 6; background: transparent; }
+    @media (hover: hover) { .explorer__stage-col:has(.status:hover) { z-index: 6; background: transparent; } }
   }
 }
 

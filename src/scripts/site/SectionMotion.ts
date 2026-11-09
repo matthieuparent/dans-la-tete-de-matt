@@ -61,7 +61,7 @@ export class SectionMotion {
         num: intro ? q('.sec__hero mark') : q('.kicker .num'),
         chars: title ? splitChars(title) : [],
         rows: q('.facts dt, .facts dd'),
-        rest: intro ? q('.sec__hero .lede') : [...q('.sec__text'), ...q('.sec__body > :is(details, .latest, .button, .sec__hint, .sec__more)')],
+        rest: intro ? q('.sec__hero .lede') : [...q('.sec__text'), ...q('.sec__body > :is(details, .latest, .button, .sec__hint, .sec__actions)')],
       };
     });
   }

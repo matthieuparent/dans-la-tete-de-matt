@@ -22,7 +22,7 @@ const chips = [
 <main id="contenu" class="carnet" data-carnet>
   <header class="carnet__band">
     <h1 class="display display--xl">Carnet de <mark>Matt</mark></h1>
-    <p class="lede">Making-of, notes de cours, parties, essais sur l'IA et vie de famille. Filtrez par section, ou lisez tout.</p>
+    <p class="lede">Il se passe plusieurs choses dans ma tête, et j'ai décidé de les mettre par écrit. Des sujets très différents : filtrez par section, ou lisez tout.</p>
   </header>
 
   <nav class="filters" data-filter-bar aria-label="Filtrer par section">
@@ -70,11 +70,11 @@ const chips = [
             <li>
               <article class:list={['note', `note--${n.kind}`]}>
                 <div class="note__media" aria-hidden="true">
-                  {n.thumb ? <img src={n.thumb} alt="" width="640" height="400" loading="lazy" decoding="async" /> : <span>[image ou vidéo]</span>}
+                  {n.thumb ? <img src={n.thumb} alt="" width="640" height="400" loading="lazy" decoding="async" /> : <span>{n.kind === 'avenir' ? 'À venir' : '[image ou vidéo]'}</span>}
                 </div>
-                <p class="note__meta">{n.kind === 'note' ? <time datetime={n.date.toISOString()}>{n.dateLabel}</time> : <span>{n.dateLabel}</span>}<span>{n.kicker}</span></p>
+                <p class="note__meta">{n.kind === 'note' ? <time datetime={n.date.toISOString()}>{n.dateLabel}</time> : n.dateLabel && <span>{n.dateLabel}</span>}<span>{n.kicker}</span></p>
                 <div class="note__text">
-                  <h3 class="note__title"><a class="sweep" href={n.url}>{n.title}</a></h3>
+                  <h3 class="note__title">{n.url ? <a class="sweep" href={n.url}>{n.title}</a> : n.title}</h3>
                   <p class="note__excerpt">{n.description}</p>
                 </div>
                 <p class="note__section"><Emblem section={n.section} />{sectionById(n.section)!.label}</p>

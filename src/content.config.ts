@@ -16,12 +16,16 @@ const carnet = defineCollection({
     related: z.array(z.enum(CARNET_SECTIONS)).default([]),
     /** Partie du titre à surligner (doit apparaître telle quelle dans `title`). */
     highlight: z.string().optional(),
+    /** Titre court pour les boutons (« Lire : … ») ; sinon, la partie du titre avant « : ». */
+    accroche: z.string().optional(),
     /** Image de partage (Open Graph), chemin absolu depuis /public. */
     image: z.string().optional(),
     /** Vignette des cartes du Carnet (16:10), chemin absolu depuis /public. */
     thumb: z.string().optional(),
     minutes: z.number().int().positive().optional(),
     draft: z.boolean().default(false),
+    /** Article annoncé : listé dans le Carnet (« À venir »), sans page ni flux RSS. */
+    upcoming: z.boolean().default(false),
   }),
 });
 

@@ -11,7 +11,13 @@ import { SHAPE_IDS, type ShapeId } from '../../data/sections';
 import { clamp, fitStage, prefersReducedMotion, viewportStage } from '../lib';
 import type { ScrollTimeline } from '../ScrollTimeline';
 import { DotsRenderer, type StageRect } from './DotsRenderer';
-import { buildShape, packShape, scatterShape, type PackedShape } from './shapes';
+import { buildShape, packShape, scatterShape, STAGE_W, suspendShape, type PackedShape } from './shapes';
+
+/**
+ * Opacité globale de la poussière en suspens (pages Lire). Les opacités par point (shapes.ts)
+ * font le reste : la plupart à ~0,06–0,16, quelques repères à ~0,3–0,45.
+ */
+const SUSPENDED_FADE = 0.5;
 
 interface Driver {
   /** Retourne false quand le pilote a fini (le directeur repasse au repos). */
@@ -53,6 +59,26 @@ export class ShapeLibrary {
 function liveRotation(s: PackedShape, t: number, reduced: boolean, scrollTurns = 0): [number, number] {
   if (s.id !== 'intro') return [s.rot[0], s.rot[1]];
   return [s.rot[0], s.rot[1] + (reduced ? 0 : s.spin * t) + scrollTurns];
+}
+
+/**
+ * Pages Lire : la poussière flotte sur place (dérive du shader), sans fin.
+ * Termine aussi un fondu d'arrivée resté incomplet (onglet ralenti).
+ */
+class FloatDriver implements Driver {
+  constructor(
+    private readonly d: DotsDirector,
+    private readonly shape: PackedShape,
+  ) {}
+
+  update(dt: number): boolean {
+    const r = this.d.renderer;
+    if (r.progress < 1) r.progress = Math.min(1, r.progress + dt * 2);
+    if (r.fade < SUSPENDED_FADE) r.fade = Math.min(SUSPENDED_FADE, r.fade + dt);
+    r.setRotation([0, 0], [0, 0]);
+    r.setDrift(this.shape.drift, this.shape.drift);
+    return true;
+  }
 }
 
 class ScrollDriver implements Driver {
@@ -209,6 +235,14 @@ export class DotsDirector {
   private handleResize(): void {
     this.renderer.resize();
     if (this.stageEl) this.renderer.setStage(fitStage(this.stageEl));
+    else if (this.suspended && (!this.running || this.driver instanceof FloatDriver)) {
+      // Pages Lire : la poussière se redistribue sur la nouvelle fenêtre et reprend sa dérive.
+      this.renderer.setStage(viewportStage());
+      const shape = suspendShape(this.suspended, this.viewportBox());
+      this.show(shape, SUSPENDED_FADE);
+      this.float(shape);
+      return;
+    }
     // Sans scène (Carnet, Article) et au repos : rien à redessiner.
     if (!this.running && this.stageEl) this.renderOnce();
   }
@@ -251,6 +285,70 @@ export class DotsDirector {
     const from = this.renderer.pair[0] ? this.renderer.snapshot() : null;
     if (!from) return Promise.resolve();
     return this.tweenTo(scatterShape(from), ms, [this.renderer.fade, 0], { easeOut: true, from });
+  }
+
+  /**
+   * Pages Lire : les points restent en suspens dans la page, très pâles, au lieu de disparaître.
+   * Depuis la forme affichée (explosion qui se pose) ou, sans forme, par simple fondu (arrivée
+   * directe). Puis plus aucun rendu : la dernière image reste à l'écran.
+   */
+  suspend(ms: number, from?: PackedShape): Promise<void> {
+    // On garde le rectangle de scène courant (sinon la forme sauterait au départ) :
+    // la poussière est calculée pour couvrir la fenêtre dans ce repère.
+    this.attachStage(null);
+    const live = !!this.renderer.pair[0] && !from;
+    if (!live) this.renderer.setStage(viewportStage());
+    const src = live ? this.renderer.snapshot() : (from ?? this.library.at(0));
+    const target = suspendShape(src, this.viewportBox());
+    this.suspended = target;
+    const start = live ? src : target;
+    return this.tweenTo(target, ms, [live ? this.renderer.fade : 0, SUSPENDED_FADE], { easeOut: true, from: start }).then(() => {
+      if (this.suspended === target) this.float(target);
+    });
+  }
+
+  /** Dérive continue de la poussière ; mouvement réduit : image fixe. */
+  private float(shape: PackedShape): void {
+    if (this.reduced) return this.idle();
+    this.driver = new FloatDriver(this, shape);
+    this.syncLoop();
+  }
+
+  /** Fenêtre en coordonnées scène (le rectangle de scène vient de viewportStage()). */
+  private viewportBox(): { x0: number; y0: number; x1: number; y1: number } {
+    const st = this.renderer.stageRect;
+    const k = st.w / STAGE_W;
+    const m = 12;
+    return { x0: (m - st.x) / k, y0: (m - st.y) / k, x1: (window.innerWidth - m - st.x) / k, y1: (window.innerHeight - m - st.y) / k };
+  }
+
+  /** Forme en suspens affichée (null ailleurs que sur les pages Lire). */
+  suspended: PackedShape | null = null;
+
+  /**
+   * Retour vers l'Explorer depuis une page Lire : la poussière en suspens (les mêmes points)
+   * se rassemble pour former `shape` dans la scène `el`. Les positions sont reportées de
+   * l'ancien rectangle de scène (fenêtre) vers le nouveau : aucun saut au départ.
+   */
+  reform(el: Element, shape: PackedShape, ms: number): Promise<void> {
+    if (!this.renderer.pair[0]) {
+      this.attachStage(el);
+      return this.gather(shape, ms);
+    }
+    const old = this.renderer.stageRect;
+    const from = this.renderer.snapshot();
+    this.attachStage(el);
+    const now = this.renderer.stageRect;
+    const k0 = old.w / STAGE_W;
+    const k1 = now.w / STAGE_W;
+    for (let i = 0; i < from.count; i++) {
+      const o = i * 3;
+      from.pos[o] = (from.pos[o]! * k0 + old.x - now.x) / k1;
+      from.pos[o + 1] = (from.pos[o + 1]! * k0 + old.y - now.y) / k1;
+    }
+    this.suspended = null;
+    // Départ et arrivée doux, comme les changements de forme au défilement de l'accueil.
+    return this.tweenTo(shape, ms, [this.renderer.fade, 1], { easeOut: false, from });
   }
 
   /** Convergence : les points arrivent de partout et forment `shape`. */

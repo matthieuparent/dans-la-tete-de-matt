@@ -78,6 +78,8 @@ export class Explorer {
   /** Branche le WebGL : la valeur lissée du directeur pilote alors les étiquettes. */
   attach(director: DotsDirector, start?: number): void {
     director.attachStage(this.stage);
+    // Le halo des Projets suit le noyau survolé (il remplace l'anneau HTML).
+    this.hover.setHalo((x, y, s) => director.renderer.setHaloOffset(x, y, s));
     director.followScroll(this.timeline, (f) => {
       this.smoothed = f;
       this.paintLabels(f);

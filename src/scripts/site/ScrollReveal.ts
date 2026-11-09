@@ -1,12 +1,14 @@
 /**
- * Arrivée / sortie au défilement pour tout ce qui n'est pas une section de l'Explorer :
+ * Arrivée au défilement pour tout ce qui n'est pas une section de l'Explorer :
  * contenu des articles et des études de cas, notes du Carnet, pied de page.
  * Même langage que SectionMotion (page d'accueil) :
  * - titres : lettres qui montent depuis l'intérieur des mots, légère rotation qui se redresse,
  *   numéro qui se balaie de gauche à droite ;
  * - blocs : arrivent de loin (70 px) en sortant d'un flou, en cascade ;
  * - lignes de fiche (dt/dd) : se tracent de gauche à droite.
- * Déclenché (toggle) par le défilement, jamais lié à lui. Le sens compte.
+ * Déclenché par le défilement, jamais lié à lui. Le sens compte (en remontant, on arrive du haut).
+ * UNE SEULE FOIS : contrairement aux sections de l'accueil, on lit ici en continu ; un bloc qui
+ * s'efface au bord de l'écran puis revient donnait un défilement saccadé.
  *
  * Ce qui est déjà à l'écran à la création :
  * - arrivée directe (animateVisible = false) : laissé tel quel (LCP, pas de flash) ;
@@ -52,63 +54,77 @@ export class ScrollReveal {
         if (!motion) return;
         const startAt = performance.now() + (opts.delay ?? 0) * 1000;
         const lag = (): number => Math.max(0, startAt - performance.now()) / 1000;
-        const vh = window.innerHeight;
         const onScreen = (el: Element): boolean => {
           const r = el.getBoundingClientRect();
-          return r.top < vh && r.bottom > 0 && r.height > 0;
+          return r.top < window.innerHeight - 8 && r.bottom > 0 && r.height > 0;
         };
         /** Déjà à l'écran à la création : on ignore son premier « onEnter ». */
         const settled = new WeakSet<Element>();
+        /** Éléments actuellement cachés (en attente d'arrivée). */
+        const waiting = new Set<HTMLElement>();
         const q = (sel: string): HTMLElement[] => Array.from(root.querySelectorAll<HTMLElement>(sel));
         // clamp() au départ : le bas de page (pied, dernières notes) n'atteindrait jamais 86 % de
         // l'écran. Pas à la fin : une fin ramenée au bas de page ferait « sortir » le pied en l'atteignant.
-        const trigger = { start: mobile ? 'clamp(top 92%)' : 'clamp(top 86%)', end: mobile ? 'bottom 6%' : 'bottom 12%' };
+        const trigger = { start: mobile ? 'clamp(top 92%)' : 'clamp(top 86%)', end: 'bottom top' };
 
         const titles = q(TITLES).map((el) => new Title(el));
         const rows = q(ROWS);
         const blocks = q(BLOCKS).filter((el) => !el.closest('.toc'));
 
-        const init = (els: Element[], hide: (els: HTMLElement[]) => void, show: (els: HTMLElement[]) => void): void => {
-          const visible = els.filter(onScreen) as HTMLElement[];
-          visible.forEach((el) => settled.add(el));
-          hide((els as HTMLElement[]).filter((el) => !settled.has(el) || opts.animateVisible));
-          if (opts.animateVisible) show(visible);
+        // Une seule interface pour les trois familles ; elle tient à jour la liste des éléments cachés
+        // et n'anime jamais deux fois le même élément.
+        const titleAnim: Anim = {
+          set: (els) => titles.filter((t) => els.includes(t.el)).forEach((t) => t.set()),
+          show: (els, dir, delay) => titles.filter((t) => els.includes(t.el)).forEach((t) => t.show(dir, delay)),
         };
+        const tracked = (a: Anim): Anim => ({
+          set: (els) => (els.forEach((el) => waiting.add(el)), a.set(els)),
+          show: (els, dir, delay) => {
+            const due = els.filter((el) => waiting.has(el));
+            due.forEach((el) => waiting.delete(el));
+            if (due.length) a.show(due, dir, delay);
+          },
+        });
+        const families: Array<[HTMLElement[], Anim]> = [
+          [titles.map((t) => t.el), tracked(titleAnim)],
+          [blocks, tracked(BLOCK)],
+          [rows, tracked(ROW)],
+        ];
+
         const fresh = (els: Element[]): HTMLElement[] =>
           (els as HTMLElement[]).filter((el) => (settled.has(el) ? (settled.delete(el), false) : true));
 
-        // Titres : un déclencheur chacun.
-        init(titles.map((t) => t.el), (els) => titles.filter((t) => els.includes(t.el)).forEach((t) => t.set()), (els) =>
-          titles.filter((t) => els.includes(t.el)).forEach((t) => t.show(1, lag())),
-        );
-        for (const t of titles) {
-          ScrollTrigger.create({
-            trigger: t.el,
-            ...trigger,
-            onEnter: () => fresh([t.el]).length && t.show(1, lag()),
-            onEnterBack: () => fresh([t.el]).length && t.show(-1, lag()),
-            onLeave: () => t.hide(1),
-            onLeaveBack: () => t.hide(-1),
-          });
-        }
-
-        // Blocs et lignes : par lots (ce qui entre ensemble arrive en cascade).
-        const wire = (els: HTMLElement[], anim: Anim): void => {
-          if (!els.length) return;
-          init(els, (e) => anim.set(e), (e) => anim.show(e, 1, lag()));
+        for (const [els, anim] of families) {
+          if (!els.length) continue;
+          const visible = els.filter(onScreen);
+          visible.forEach((el) => settled.add(el));
+          anim.set(els.filter((el) => !settled.has(el) || opts.animateVisible));
+          if (opts.animateVisible) anim.show(visible, 1, lag());
           ScrollTrigger.batch(els, {
             ...trigger,
             interval: 0.08,
             onEnter: (e) => anim.show(fresh(e), 1, lag()),
             onEnterBack: (e) => anim.show(fresh(e), -1, lag()),
-            onLeave: (e) => anim.hide(e as HTMLElement[], 1),
-            onLeaveBack: (e) => anim.hide(e as HTMLElement[], -1),
           });
+        }
+
+        // Rattrapage : la ligne de départ (86 %) laisse une bande en bas d'écran. Si la page
+        // s'arrête là (fin de défilement, polices chargées, hauteur qui change), ce qui y est
+        // visible ne doit pas rester caché : on le fait arriver.
+        const sweep = (): void => {
+          for (const [els, anim] of families) {
+            const due = els.filter((el) => waiting.has(el) && onScreen(el));
+            if (due.length) anim.show(due, 1, lag());
+          }
         };
-        wire(blocks, BLOCK);
-        wire(rows, ROW);
+        ScrollTrigger.addEventListener('scrollEnd', sweep);
+        ScrollTrigger.addEventListener('refresh', sweep);
+        const sweepTimer = window.setTimeout(sweep, 600);
 
         return () => {
+          ScrollTrigger.removeEventListener('scrollEnd', sweep);
+          ScrollTrigger.removeEventListener('refresh', sweep);
+          window.clearTimeout(sweepTimer);
           for (const t of titles) t.reset();
           gsap.set([...rows, ...blocks], { clearProps: 'all' });
         };
@@ -143,7 +159,6 @@ export class ScrollReveal {
 interface Anim {
   set(els: HTMLElement[]): void;
   show(els: HTMLElement[], dir: Dir, delay: number): void;
-  hide(els: HTMLElement[], dir: Dir): void;
 }
 
 const from = (dir: Dir): 'start' | 'end' => (dir === 1 ? 'start' : 'end');
@@ -159,10 +174,6 @@ const BLOCK: Anim = {
       { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 1.1, ease: 'expo.out', delay, stagger: { each: 0.09, from: from(dir) }, clearProps: 'filter' },
     );
   },
-  hide(els, dir) {
-    gsap.killTweensOf(els);
-    gsap.to(els, { autoAlpha: 0, y: -40 * dir, filter: 'blur(8px)', duration: 0.45, ease: 'power2.in', stagger: 0.03 });
-  },
 };
 
 const ROW: Anim = {
@@ -175,10 +186,6 @@ const ROW: Anim = {
       { autoAlpha: 0, x: -40, clipPath: 'inset(0 100% 0 0)' },
       { autoAlpha: 1, x: 0, clipPath: 'inset(0 0% 0 0)', duration: 0.9, ease: 'expo.out', delay, stagger: 0.06 },
     );
-  },
-  hide(els) {
-    gsap.killTweensOf(els);
-    gsap.to(els, { autoAlpha: 0, x: 30, duration: 0.4, ease: 'power2.in', stagger: 0.02 });
   },
 };
 
@@ -226,11 +233,6 @@ class Title {
     else this.el.classList.add('is-in');
   }
 
-  hide(dir: Dir): void {
-    gsap.killTweensOf(this.chars);
-    gsap.to(this.chars, { yPercent: -115 * dir, rotate: -6 * dir, duration: 0.5, ease: 'power3.in', stagger: { each: Math.min(0.02, this.each), from: from(dir) } });
-    this.el.classList.remove('is-in');
-  }
 
   reset(): void {
     gsap.set(this.chars, { clearProps: 'all' });

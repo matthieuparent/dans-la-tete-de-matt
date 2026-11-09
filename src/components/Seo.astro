@@ -39,6 +39,6 @@ const img = new URL(image, site).href;
 {modified && <meta property="article:modified_time" content={modified.toISOString()} />}
 <meta name="twitter:card" content="summary_large_image" />
 
-<link rel="alternate" type="application/rss+xml" title={`${SITE_NAME} — Carnet`} href="/rss.xml" />
+<link rel="alternate" type="application/rss+xml" title={`${SITE_NAME} · Carnet`} href="/rss.xml" />
 <link rel="sitemap" href="/sitemap.xml" />
 {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}

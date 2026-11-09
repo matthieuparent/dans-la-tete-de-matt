@@ -57,6 +57,8 @@ const vertexShader = /* glsl */ `
   uniform float uPixelRatio;
   uniform float uSizeScale;  // échelle des rayons d'encre (≈ échelle de la scène, adoucie)
   uniform float uStageScale; // échelle exacte de la scène (halos et fils : ce sont des surfaces)
+  uniform vec2  uHalo;       // décalage des points d'accent (px scène) : le halo des Projets glisse sur la ligne de temps
+  uniform float uHaloScale;  // échelle des points d'accent (le halo rapetisse en chemin)
 
   varying float vAlpha;
   varying float vAccent;
@@ -106,6 +108,7 @@ const vertexShader = /* glsl */ `
     float drift = mix(uDriftA, uDriftB, e);
     pos.xy += vec2(sin(uTime * 0.35 + pos.y * 0.018 + aSeed.w * 0.6),
                    cos(uTime * 0.29 + pos.x * 0.018)) * drift;
+    pos.xy += uHalo * acc;
 
     // Profondeur → taille et opacité (normalisées à 1 à mi-profondeur, comme la maquette).
     float dn = clamp((pos.z / ${DEPTH_SCALE.toFixed(1)} + 1.0) * 0.5, 0.0, 1.0);
@@ -121,7 +124,7 @@ const vertexShader = /* glsl */ `
 
     vAccent = acc;
     vAlpha = meta.y * mix(alphaMul, 1.0, acc) * fade;
-    vSize = (2.0 * meta.x * mix(uSizeScale * sizeMul, uStageScale, acc) + 1.0) * uPixelRatio;
+    vSize = (2.0 * meta.x * mix(uSizeScale * sizeMul, uStageScale * uHaloScale, acc) + 1.0) * uPixelRatio;
     gl_PointSize = keep ? vSize : 0.0;
     gl_Position = keep ? vec4(clip, 0.0, 1.0) : vec4(2.0, 2.0, 2.0, 1.0);
   }
@@ -218,6 +221,8 @@ export class DotsRenderer {
       uInk: { value: hex('#16241C') },
       uAccent: { value: hex('#D4E35A') },
       uFade: { value: 1 },
+      uHalo: { value: new Vector2() },
+      uHaloScale: { value: 1 },
     };
 
     [0, 1].forEach((pass) => {
@@ -303,6 +308,12 @@ export class DotsRenderer {
     const scale = rect.w / STAGE_W;
     this.uniforms.uSizeScale!.value = Math.pow(scale, 0.6) * (this.count < 2000 ? 1.25 : 1);
     this.uniforms.uStageScale!.value = scale;
+  }
+
+  /** Décale les points d'accent (px scène). 0,0 = position d'origine. */
+  setHaloOffset(x: number, y: number, scale = 1): void {
+    (this.uniforms.uHalo!.value as Vector2).set(x, y);
+    this.uniforms.uHaloScale!.value = scale;
   }
 
   resize(): void {
