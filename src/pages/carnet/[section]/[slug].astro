@@ -10,6 +10,7 @@ import Quote from '../../../components/mdx/Quote.astro';
 import BrainDemo from '../../../components/mdx/BrainDemo.astro';
 import Photo from '../../../components/mdx/Photo.astro';
 import Gallery from '../../../components/mdx/Gallery.astro';
+import Courriel from '../../../components/mdx/Courriel.astro';
 
 export const getStaticPaths = (async () => {
   const notes = await getNotes();
@@ -104,7 +105,7 @@ const jsonLd = graph(
         </nav>
       )}
       <div class="prose" data-article-body>
-        <Content components={{ Note: Note_, Quote, BrainDemo, Photo, Gallery }} />
+        <Content components={{ Note: Note_, Quote, BrainDemo, Photo, Gallery, Courriel }} />
       </div>
     </div>
 

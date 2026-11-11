@@ -1,0 +1,10 @@
+---
+// Lien courriel dans un article. Même protection que le pied de page :
+// l'adresse est servie à l'envers et réassemblée par le script de Footer.astro.
+import { PROFILE } from '../../data/sections';
+const rev = (v: string) => [...v].reverse().join('');
+const { user, domain } = PROFILE.email;
+const fallback = `${user} [arobase] ${domain.replace(/\./g, ' [point] ')}`;
+---
+
+<a class="js-mail" href="#contact" data-u={rev(user)} data-d={rev(domain)}>{fallback}</a>
