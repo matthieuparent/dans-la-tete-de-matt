@@ -33,6 +33,11 @@ const jsonLd = graph(website(site), person(site), {
   })),
 });
 const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`;
+/** « de projets », « d'enseignement », « d'IA » (sigle gardé en majuscules). */
+const deSection = (label: string): string => {
+  const w = label === label.toUpperCase() ? label : label.toLowerCase();
+  return /^[aeiouyéèêàâîôû]/i.test(w) ? `d'${w}` : `de ${w}`;
+};
 ---
 
 <Base title={`${PROFILE.name} | Enseignant en multimédia et développeur web créatif`} fullTitle {description} mode="explorer" {jsonLd}>
@@ -86,7 +91,10 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
         <div class="sec__hero">
           <h1 id="titre" class="display display--xl">Dans la tête<br /> de <mark>Matt</mark></h1>
           <p class="sec__id"><strong>{PROFILE.name}</strong>, {PROFILE.headline}</p>
-          <p class="lede">{PROFILE.tagline}</p>
+          <a class="scroll-cue" href="#projets" data-scroll-cue>
+            <span>Défiler pour explorer</span>
+            <span class="scroll-cue__line" aria-hidden="true"></span>
+          </a>
         </div>
       </div>
       <img class="sec__figure" src="/formes/intro.svg" width={STAGE_W} height={STAGE_H} alt="" loading="lazy" decoding="async" />
@@ -96,9 +104,8 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
       rest.map((s) => (
         <section id={s.id} class:list={['sec', `sec--${s.id}`]} data-shape={s.id} data-shape-label={s.shapeLabel} aria-labelledby={`h-${s.id}`}>
           <div class="sec__body">
-            <p class="kicker"><span class="num">{s.num}</span></p>
             <h2 id={`h-${s.id}`} class="display display--l" set:html={s.title} />
-            <p class="sec__text">{s.text}</p>
+            <p class="sec__text"><mark>{s.text}</mark></p>
             {s.rows.length > 0 && (
               <dl class="facts">
                 {s.rows.map(([k, v]) => (<><dt>{k}</dt><dd>{Array.isArray(v) ? <ul class="facts__list" role="list">{v.map((x) => <li>{x}</li>)}</ul> : v}</dd></>))}
@@ -121,21 +128,15 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
               </>
             ) : (
               <>
-                {s.hint && (
-                  <p class="sec__hint">
-                    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9" cy="9" r="7" /><circle cx="9" cy="9" r="2" fill="currentColor" /></svg>
-                    <span>{s.hint}</span>
-                  </p>
-                )}
                 <p class="sec__actions">
                   {lastBySection[s.id] && (
-                    <a class="button" href={lastBySection[s.id]?.url}>
-                      <span class="sr-only">Le plus récent : </span>Lire « {lastBySection[s.id]?.accroche} »
+                    // Au survol, le libellé glisse et laisse voir le titre de l'article.
+                    <a class="button button--swap" href={lastBySection[s.id]?.url}>
+                      <span class="button__face">Lire le dernier article<span class="sr-only"> : « {lastBySection[s.id]?.accroche} »</span></span>
+                      <span class="button__face button__face--alt" aria-hidden="true">{lastBySection[s.id]?.accroche}</span>
                     </a>
                   )}
-                  <a class="button button--ghost" href={`/carnet/${s.id}`}>
-                    Voir les notes<span class="sr-only"> « {s.label} »</span>
-                  </a>
+                  <a class="button button--ghost" href={`/carnet/${s.id}`}>Voir tous les articles {deSection(s.label)}</a>
                 </p>
               </>
             )}
@@ -145,13 +146,12 @@ const pct = (v: number, of: number): string => `${((v / of) * 100).toFixed(2)}%`
       ))
     }
 
-    <!-- Index des sections (bureau : colonne de droite ; mobile : barre fixe en bas). -->
+    <!-- Index des sections : barre sous l'en-tête ; chaque case se remplit pendant qu'on lit sa section. -->
     <nav class="index" aria-label="Sections">
       <ol role="list">
         {SECTIONS.map((s, i) => (
           <li>
             <a href={`#${s.id}`} data-index-link aria-current={i === 0 ? 'true' : undefined}>
-              <span class="index__num">{s.num}</span>
               <span class="index__label">{s.label}</span>
             </a>
           </li>

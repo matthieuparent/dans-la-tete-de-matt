@@ -44,13 +44,15 @@
 
     --header-h: 96px;
     --gutter: 64px;
-    --index-w: 176px;
+    /* Colonne de texte de l'Explorer ; barre d'index sous l'en-tête. */
+    --text-w: 480px;
+    --index-bar: 44px;
     --sweep-ease: cubic-bezier(0.3, 0.7, 0.2, 1);
 
     color-scheme: light;
   }
   @media (max-width: 899px) {
-    :root { --header-h: 64px; --gutter: 16px; }
+    :root { --header-h: 64px; --gutter: 16px; --index-bar: 40px; }
   }
 }
 
@@ -79,8 +81,7 @@
     pointer-events: none;
     background:
       linear-gradient(var(--rule), var(--rule)) var(--gutter) 0 / 1px 100% no-repeat,
-      linear-gradient(var(--rule), var(--rule)) calc(var(--gutter) + 416px) 0 / 1px 100% no-repeat,
-      linear-gradient(var(--rule), var(--rule)) calc(100% - var(--gutter) - var(--index-w)) 0 / 1px 100% no-repeat,
+      linear-gradient(var(--rule), var(--rule)) calc(var(--gutter) + var(--text-w)) 0 / 1px 100% no-repeat,
       linear-gradient(var(--rule), var(--rule)) calc(100% - var(--gutter)) 0 / 1px 100% no-repeat;
   }
   @media (max-width: 899px) {
@@ -325,6 +326,13 @@
   .button:hover, .button:focus-visible { box-shadow: 6px 6px 0 var(--hl); transform: translate(-2px, -2px); }
   .button--ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
   .button--ghost:hover, .button--ghost:focus-visible { background: var(--bg); box-shadow: inset 0 0 0 1px var(--ink), 6px 6px 0 var(--hl); }
+  /* Deux libellés empilés dans la même case (le bouton prend la largeur du plus long) :
+     au survol, le premier monte et sort, le second (titre de l'article) arrive du bas. */
+  .button--swap { display: inline-grid; overflow: hidden; }
+  .button__face { grid-area: 1 / 1; transition: transform 420ms var(--sweep-ease), opacity 300ms; }
+  .button__face--alt { transform: translateY(110%); opacity: 0; }
+  .button--swap:is(:hover, :focus-visible) .button__face:not(.button__face--alt) { transform: translateY(-110%); opacity: 0; }
+  .button--swap:is(:hover, :focus-visible) .button__face--alt { transform: none; opacity: 1; }
 
   .back-link { font-size: 15px; font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; align-self: flex-start; }
 
@@ -400,13 +408,14 @@
   /* ------------------------------ Explorer ------------------------------ */
   .explorer {
     display: grid;
-    grid-template-columns: var(--gutter) minmax(300px, 416px) minmax(0, 1fr) var(--index-w) var(--gutter);
+    grid-template-columns: var(--gutter) minmax(300px, var(--text-w)) minmax(0, 1fr) var(--gutter);
+    padding-top: var(--index-bar);
   }
   .explorer__stage-col { grid-column: 3; grid-row: 1 / span 7; }
   .explorer__sticky {
     position: sticky;
-    top: var(--header-h);
-    height: calc(100svh - var(--header-h));
+    top: calc(var(--header-h) + var(--index-bar));
+    height: calc(100svh - var(--header-h) - var(--index-bar));
     padding-bottom: 32px;
     display: flex;
     flex-direction: column;
@@ -449,7 +458,7 @@
   .sec {
     grid-column: 2;
     padding: 32px 36px 28svh 0;
-    scroll-margin-top: var(--header-h);
+    scroll-margin-top: calc(var(--header-h) + var(--index-bar));
     transition: opacity 0.5s ease;
   }
   /* Comme le titre de l'intro, le panneau de chaque section déborde sur la forme et passe
@@ -464,23 +473,24 @@
   }
   .sec__body > h2 { font-size: clamp(56px, 8.4vw, 124px); }
   .sec__text { font-size: 18px; line-height: 1.5; text-wrap: pretty; max-width: 440px; }
-  .sec__body > :is(.sec__hint, .sec__actions, details, .latest, .button) { max-width: 440px; }
+  .sec__body > :is(.sec__actions, details, .latest, .button) { max-width: 440px; }
+  /* La description porte le surligneur (balayé à l'arrivée, voir SectionMotion). */
+  .sec__text mark { padding: 0.04em 0.12em; }
   /* Le panneau survole la forme sans bloquer le survol des noyaux : seuls les liens,
      boutons et blocs de texte captent le pointeur. */
   .sec__body { pointer-events: none; }
-  .sec__body :is(a, button, summary, details, .sec__text, .facts, .kicker) { pointer-events: auto; }
+  .sec__body :is(a, button, summary, details, .sec__text, .facts) { pointer-events: auto; }
   .sec__body .facts { max-width: none; }
-  .sec__hint { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); margin-top: 12px; }
-  /* Le lien garde sa propre largeur : le surligneur ne balaie que le lien, pas la ligne. */
-  /* « Voir le dernier » (plein) puis « Voir les notes » (contour), côte à côte. */
-  .sec__actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  /* « Lire le dernier article » (plein) puis « Voir tous les articles » (contour), l'un sous l'autre. */
+  /* Même largeur pour les deux (celle du plus long) : une colonne nette. */
+  .sec__actions { display: grid; width: max-content; max-width: 100%; gap: 12px; margin-top: 4px; }
   .sec__figure { display: none; }
   .sec--carnet { min-height: 75svh; }
 
   .sec--intro { display: block; }
   /* Premier écran : fiche Profil en haut, grand titre en bas (comme la maquette). */
   .sec__first {
-    min-height: calc(100svh - var(--header-h) - 32px - 120px);
+    min-height: calc(100svh - var(--header-h) - var(--index-bar) - 32px - 120px);
     margin-bottom: -10svh;
     display: flex;
     flex-direction: column;
@@ -489,13 +499,30 @@
   }
   .sec__id { margin: 0; font-size: clamp(15px, 1.15vw, 17px); line-height: 1.45; max-width: 560px; color: var(--muted); text-wrap: pretty; }
   .sec__id strong { font-weight: 500; color: var(--ink); }
+  /* Invitation à défiler : un trait qui coule vers le bas, en boucle. */
+  .scroll-cue { display: inline-flex; align-items: center; gap: 14px; align-self: flex-start; min-height: 44px; font-size: 14px; color: var(--muted); transition: color 200ms; }
+  .scroll-cue:hover { color: var(--ink); }
+  .scroll-cue__line { position: relative; width: 1px; height: 40px; overflow: hidden; background: var(--rule-2); }
+  .scroll-cue__line::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    transform: translateY(-100%);
+    animation: scroll-cue 1.8s cubic-bezier(0.6, 0, 0.3, 1) infinite;
+  }
+  @keyframes scroll-cue {
+    0% { transform: translateY(-100%); }
+    55% { transform: translateY(0); }
+    100% { transform: translateY(100%); }
+  }
   .sec--intro .facts { grid-template-columns: 112px 1fr; }
   .sec--intro .facts dt { padding-left: 16px; }
   .sec__hero {
     /* Le titre déborde sur la zone des points, et passe AU-DESSUS du canvas (z-index 6 > 5). */
     position: relative;
     z-index: 6;
-    width: min(1000px, calc(100vw - 2 * var(--gutter) - var(--index-w)));
+    width: min(1000px, calc(100vw - 2 * var(--gutter)));
     display: flex;
     flex-direction: column;
     gap: 22px;
@@ -508,26 +535,41 @@
   .latest a { font-weight: 600; }
   .sec--carnet .button { align-self: flex-start; }
 
-  .index { grid-column: 4; grid-row: 1 / span 7; }
-  .index ol { position: sticky; top: calc(var(--header-h) + 32px); padding-left: 16px; transition: opacity 0.4s; }
+  /* Index : barre fixe sous l'en-tête. Chaque case se remplit au surligneur pendant qu'on lit
+     sa section (--fill, 0 → 1, posé par Explorer) ; les sections passées restent pâles. */
+  .index { position: fixed; top: var(--header-h); left: 0; right: 0; z-index: 9; background: var(--bg); border-bottom: 1px solid var(--rule); }
+  .index ol { display: flex; padding: 0 var(--gutter); transition: opacity 0.4s; scrollbar-width: none; }
+  .index ol::-webkit-scrollbar { display: none; }
+  .index li { flex: 1 1 0; }
   .index a {
+    position: relative;
+    isolation: isolate;
     display: flex;
-    gap: 12px;
-    min-height: 44px;
     align-items: center;
-    padding: 0 8px;
-    font-size: 16px;
+    justify-content: center;
+    min-height: var(--index-bar);
+    padding: 0 12px;
+    font-size: 14px;
     font-weight: 500;
-    border-top: 1px solid var(--rule-2);
-    background-image: linear-gradient(100deg, var(--hl) 0 calc(100% - 0.55em), transparent calc(100% - 0.55em + 1px));
-    background-repeat: no-repeat;
-    background-size: 0% 100%;
-    transition: background-size 180ms var(--sweep-ease);
+    color: var(--muted);
+    white-space: nowrap;
+    border-left: 1px solid var(--rule-2);
+    transition: color 200ms;
   }
-  .index a:hover { background-size: calc(100% + 0.55em) 100%; }
-  .index a[aria-current] { background: var(--hl); }
-  .index__num { font-size: 12px; color: var(--muted); width: 22px; font-variant-numeric: tabular-nums; }
-  .index a[aria-current] .index__num { color: var(--ink); }
+  .index li:last-child a { border-right: 1px solid var(--rule-2); }
+  .index a::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--hl);
+    transform: scaleX(var(--fill, 0));
+    transform-origin: 0 50%;
+    opacity: 0.4;
+    transition: opacity 300ms;
+  }
+  .index a:hover, .index a[aria-current] { color: var(--ink); }
+  .index a[aria-current]::before { opacity: 1; }
 
   .project-card {
     position: fixed;
@@ -641,16 +683,9 @@
   /* Écrans moyens : quand la forme deviendrait trop petite, l'index passe en barre horizontale
      sous l'en-tête et la forme récupère sa colonne, en s'étendant un peu derrière le texte. */
   @media (min-width: 900px) and (max-width: 1279px) {
-    :root { --index-w: 0px; --index-bar: 48px; }
-    .explorer { padding-top: var(--index-bar); }
+    :root { --text-w: 400px; }
     .explorer__stage-col { margin-left: calc(-1 * clamp(110px, 16vw, 200px)); }
-    .explorer__sticky { top: calc(var(--header-h) + var(--index-bar)); height: calc(100svh - var(--header-h) - var(--index-bar)); }
-    .sec { scroll-margin-top: calc(var(--header-h) + var(--index-bar)); padding-right: 0; }
-    .index { position: fixed; top: var(--header-h); left: 0; right: 0; z-index: 9; background: var(--bg); border-bottom: 1px solid var(--rule); }
-    .index ol { position: static; display: flex; padding: 0 var(--gutter); }
-    .index li { flex: 1 1 0; }
-    .index a { min-height: var(--index-bar); justify-content: center; border-top: 0; border-left: 1px solid var(--rule-2); padding: 0 10px; }
-    .index li:last-child a { border-right: 1px solid var(--rule-2); }
+    .sec { padding-right: 0; }
   }
   /* La fiche Profil de l'intro passe aussi au-dessus des points quand ils sont derrière. */
   .sec--intro .facts { position: relative; z-index: 6; }
@@ -664,7 +699,7 @@
     .explorer { display: block; padding-bottom: 64px; }
     .explorer__stage-col {
       position: sticky;
-      top: var(--header-h);
+      top: calc(var(--header-h) + var(--index-bar));
       z-index: 1;
       height: 34svh;
       background: var(--bg);
@@ -690,7 +725,7 @@
     .explorer__sticky { position: static; height: 100%; }
     .stage__labels { font-size: 11px; }
     .stage__label.is-start, .stage__leader { display: none; }
-    .sec { padding: 24px var(--gutter) 22svh; scroll-margin-top: calc(var(--header-h) + 34svh + 24px); }
+    .sec { padding: 24px var(--gutter) 22svh; scroll-margin-top: calc(var(--header-h) + var(--index-bar) + 34svh + 24px); }
     .sec__first { min-height: 0; margin-bottom: 0; }
     /* Mobile : le texte passe SOUS la forme collante (pas de débordement au-dessus). */
     .sec__body, .sec__hero, .sec--intro .facts { width: auto; z-index: auto; position: static; }
@@ -699,12 +734,12 @@
     .sec--intro .facts dt { padding-left: 0; }
     .sec--carnet { min-height: 60svh; padding-bottom: 48px; }
 
-    .index { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--bg); border-top: 1px solid var(--ink); padding-bottom: env(safe-area-inset-bottom); }
-    .index ol { position: static; padding: 0; display: flex; overflow-x: auto; scrollbar-width: none; }
+    /* Mobile : la barre défile à l'horizontale ; la case en cours revient au centre (Explorer). */
+    .index ol { padding: 0; overflow-x: auto; }
     .index li { flex: 1 0 auto; }
-    .index a { min-height: 52px; justify-content: center; border-top: 0; border-right: 1px solid var(--rule-2); padding: 0 12px; gap: 6px; }
-    .index a:not([aria-current]) .index__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-    .index__num { width: auto; }
+    .index a { padding: 0 14px; font-size: 13px; }
+    .index li:first-child a { border-left: 0; }
+    .index li:last-child a { border-right: 0; }
 
     .project-card {
       left: 0 !important;

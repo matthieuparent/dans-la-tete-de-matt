@@ -5,7 +5,8 @@
  * reste natif et libre. Le sens compte : en descendant, le contenu monte ; en remontant, l'inverse.
  *
  * Arrivée (~1,2 s au total) :
- * - le numéro surligné se balaie de gauche à droite (le geste de la marque) ;
+ * - le surligneur se balaie de gauche à droite (le geste de la marque) : sur « Matt » pour
+ *   l'intro, sur le texte de description pour les sections ;
  * - le titre monte lettre par lettre depuis l'intérieur de chaque mot (masque), avec une
  *   légère rotation qui se redresse ;
  * - le reste arrive en cascade, de loin (70 px), en sortant d'un flou ;
@@ -58,10 +59,10 @@ export class SectionMotion {
       return {
         section,
         intro,
-        num: intro ? q('.sec__hero mark') : q('.kicker .num'),
+        num: q(intro ? '.sec__hero mark' : '.sec__text mark'),
         chars: title ? splitChars(title) : [],
         rows: q('.facts dt, .facts dd'),
-        rest: intro ? q('.sec__hero :is(.sec__id, .lede)') : [...q('.sec__text'), ...q('.sec__body > :is(details, .latest, .button, .sec__hint, .sec__actions)')],
+        rest: intro ? q('.sec__hero :is(.sec__id, .scroll-cue)') : [...q('.sec__text'), ...q('.sec__body > :is(details, .latest, .button, .sec__actions)')],
       };
     });
   }
@@ -99,9 +100,8 @@ export class SectionMotion {
       { yPercent: 0, rotate: 0, duration: 1.05, ease: 'expo.out', stagger: { each: 0.045, from: dir === 1 ? 'start' : 'end' } },
       0,
     );
-    if (p.intro) tl.fromTo(p.num, { autoAlpha: 1, backgroundSize: '0% 100%' }, { backgroundSize: '100% 100%', duration: 0.6, ease: 'power3.inOut' }, 0.05);
-    // Sections : le badge (surligneur + chiffres) se révèle d'un balayage de gauche à droite.
-    else tl.fromTo(p.num, { autoAlpha: 1, clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.55, ease: 'power3.inOut' }, 0.05);
+    // Le surligneur se balaie de gauche à droite ; sur la description, une fois le texte arrivé.
+    tl.fromTo(p.num, { backgroundSize: '0% 100%' }, { backgroundSize: '100% 100%', duration: p.intro ? 0.6 : 0.9, ease: 'power3.inOut' }, p.intro ? 0.05 : 0.55);
     tl.fromTo(
       p.rows,
       { autoAlpha: 0, x: -40, clipPath: 'inset(0 100% 0 0)' },
@@ -122,15 +122,14 @@ export class SectionMotion {
     gsap.killTweensOf(all);
     if (instant) {
       gsap.set(p.chars, { yPercent: 115, rotate: 9 });
-      gsap.set(p.num, p.intro ? { backgroundSize: '0% 100%' } : { clipPath: 'inset(0% 100% 0% 0%)' });
+      gsap.set(p.num, { backgroundSize: '0% 100%' });
       gsap.set(p.rows, { autoAlpha: 0, x: -40, clipPath: 'inset(0 100% 0 0)' });
       gsap.set(p.rest, { autoAlpha: 0, y: 70, filter: 'blur(12px)' });
       return;
     }
     const tl = gsap.timeline();
     tl.to(p.chars, { yPercent: -115 * dir, rotate: -6 * dir, duration: 0.5, ease: 'power3.in', stagger: { each: 0.02, from: dir === 1 ? 'start' : 'end' } }, 0);
-    // Sortie : le badge se replie vers la droite (le balayage continue dans le même sens).
-    tl.to(p.num, p.intro ? { backgroundSize: '0% 100%', duration: 0.35, ease: 'power2.in' } : { clipPath: 'inset(0% 0% 0% 100%)', duration: 0.35, ease: 'power2.in' }, 0);
+    tl.to(p.num, { backgroundSize: '0% 100%', duration: 0.35, ease: 'power2.in' }, 0);
     tl.to(p.rows, { autoAlpha: 0, x: 30, duration: 0.4, ease: 'power2.in', stagger: 0.02 }, 0);
     tl.to(p.rest, { autoAlpha: 0, y: -40 * dir, filter: 'blur(8px)', duration: 0.45, ease: 'power2.in', stagger: 0.03 }, 0);
   }

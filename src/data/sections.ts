@@ -21,7 +21,6 @@ export interface SectionInfo {
   readonly text: string;
   /** Valeur simple, ou liste (affichée une par ligne). */
   readonly rows: ReadonlyArray<readonly [string, string | readonly string[]]>;
-  readonly hint: string;
   /** Description courte de la forme, pour les lecteurs d'écran. */
   readonly shapeLabel: string;
 }
@@ -82,7 +81,6 @@ export const SECTIONS: readonly SectionInfo[] = [
       ['Basé à', PROFILE.city],
       ['Statut', PROFILE.status],
     ],
-    hint: '',
     shapeLabel: 'Cerveau en nuage de points',
   },
   {
@@ -96,7 +94,6 @@ export const SECTIONS: readonly SectionInfo[] = [
       ['Types', 'WordPress, 3D, SCSS, front-end créatif, IA'],
       ['Sélection', VRAIS_PROJETS.length > 1 ? `${VRAIS_PROJETS.length} projets` : `${VRAIS_PROJETS.length} projet`],
     ],
-    hint: 'Survolez ou touchez un noyau pour ouvrir le projet',
     shapeLabel: `${PROJETS.length} noyaux de points reliés par une ligne de temps, un par projet`,
   },
   {
@@ -110,7 +107,6 @@ export const SECTIONS: readonly SectionInfo[] = [
       ['Cette session', ENSEIGNEMENT.session.join(' · ')],
       ['Cours déjà enseignés', ENSEIGNEMENT.dejaEnseignes.length ? ENSEIGNEMENT.dejaEnseignes : '[liste à venir]'],
     ],
-    hint: 'Le tableau affiche le cours en vedette',
     shapeLabel: 'Les points forment un tableau de classe et trois rangées de pupitres',
   },
   {
@@ -126,7 +122,6 @@ export const SECTIONS: readonly SectionInfo[] = [
       ['Sport joué', ['Balle molle', 'Volleyball']],
       ['Télé', ['Canadiens', 'Real Madrid', 'The Rings of Power']],
     ],
-    hint: 'Les boutons surlignés lanceront bientôt une démo jouable',
     shapeLabel: "Les points forment la silhouette d'une console portable",
   },
   {
@@ -140,7 +135,6 @@ export const SECTIONS: readonly SectionInfo[] = [
       ['Niveau', 'En apprentissage'],
       ['Position', "On ne sait pas où on s'en va : à nous d'aller quelque part de plaisant."],
     ],
-    hint: 'Un chemin s’active de la question à la réponse',
     shapeLabel: 'Les points forment un réseau de neurones artificiels à cinq couches',
   },
   {
@@ -153,7 +147,6 @@ export const SECTIONS: readonly SectionInfo[] = [
       ['Au quotidien', ['Organisation', 'Terrain de soccer', 'Infériorité numérique']],
       ['Ce que ça change', ['Rigueur', 'Passion', 'Envie de se dépasser']],
     ],
-    hint: '',
     shapeLabel: 'Cinq silhouettes en points, reliées par un fil',
   },
   {
@@ -163,7 +156,6 @@ export const SECTIONS: readonly SectionInfo[] = [
     title: 'Carnet',
     text: "Il se passe plusieurs choses dans ma tête, et j'ai décidé de commencer à les mettre par écrit. Je vais parler de plein de sujets différents : à vous de voir ce qui vous intéresse.",
     rows: [],
-    hint: '',
     shapeLabel: 'Les points s’alignent en lignes de texte',
   },
 ];

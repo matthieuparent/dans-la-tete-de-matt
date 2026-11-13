@@ -17,6 +17,7 @@ export class Explorer {
   private active = -1;
   private raf = 0;
   private readonly labels: HTMLElement[];
+  private readonly indexLinks: HTMLAnchorElement[];
   private readonly poster: HTMLImageElement | null;
   private readonly hover: ProjectHover;
   private readonly status: StatusLabel | null;
@@ -29,6 +30,7 @@ export class Explorer {
     this.timeline = new ScrollTimeline(sections);
     this.stage = root.querySelector<HTMLElement>('[data-stage]')!;
     this.labels = Array.from(this.stage.querySelectorAll<HTMLElement>('[data-labels-for]'));
+    this.indexLinks = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-index-link]'));
     this.poster = this.stage.querySelector<HTMLImageElement>('[data-poster]');
     this.hover = new ProjectHover(this.stage, () => this.smoothed);
     const statusEl = this.stage.querySelector<HTMLElement>('[data-status]');
@@ -57,7 +59,7 @@ export class Explorer {
     );
 
     // Index : saut sans animation si mouvement réduit (le CSS gère le défilement doux sinon).
-    root.querySelectorAll<HTMLAnchorElement>('[data-index-link]').forEach((a) =>
+    root.querySelectorAll<HTMLAnchorElement>('[data-index-link], [data-scroll-cue]').forEach((a) =>
       a.addEventListener('click', (e) => {
         const id = a.hash.slice(1);
         const i = SHAPE_IDS.indexOf(id as (typeof SHAPE_IDS)[number]);
@@ -96,6 +98,7 @@ export class Explorer {
 
   private update(): void {
     const f = this.timeline.valueAt(window.scrollY);
+    this.paintIndex();
     if (!document.documentElement.classList.contains('dots-ready')) {
       this.smoothed = f;
       this.paintLabels(f);
@@ -106,8 +109,14 @@ export class Explorer {
     const id = SHAPE_IDS[i] ?? 'intro';
 
     document.querySelectorAll<HTMLAnchorElement>('[data-index-link]').forEach((a) => {
-      if (a.hash === `#${id}`) a.setAttribute('aria-current', 'true');
-      else a.removeAttribute('aria-current');
+      if (a.hash !== `#${id}`) return a.removeAttribute('aria-current');
+      a.setAttribute('aria-current', 'true');
+      // Barre plus large que l'écran (mobile) : la case en cours revient au centre.
+      const bar = a.closest('ol');
+      if (bar && bar.scrollWidth > bar.clientWidth) {
+        const left = a.offsetLeft - (bar.clientWidth - a.offsetWidth) / 2;
+        bar.scrollTo({ left, behavior: prefersReducedMotion() ? 'instant' : 'smooth' });
+      }
     });
     // « Lire » ouvre le Carnet filtré sur la section en cours.
     const lire = isCarnetSection(id) ? `/carnet/${id}` : '/carnet';
@@ -126,6 +135,15 @@ export class Explorer {
         }, 120);
       }
     }
+  }
+
+  /** Chaque case de l'index se remplit pendant qu'on avance dans sa section. */
+  private paintIndex(): void {
+    const fills = this.timeline.fills(window.scrollY);
+    this.indexLinks.forEach((a, i) => {
+      const v = (fills[i] ?? 0).toFixed(3);
+      if (a.style.getPropertyValue('--fill') !== v) a.style.setProperty('--fill', v);
+    });
   }
 
   /** Les étiquettes de la forme k sont visibles quand f est à moins de 0,3 de k. */

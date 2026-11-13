@@ -46,6 +46,19 @@ export class ScrollTimeline {
     return n - 1;
   }
 
+  /**
+   * Avancement dans chaque section (0 → 1) : de son ancre à celle de la suivante,
+   * la dernière jusqu'au bas de la page. Pour la barre d'index.
+   */
+  fills(y: number): number[] {
+    const a = this.anchors;
+    const end = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    return a.map((start, i) => {
+      const stop = a[i + 1] ?? end;
+      return clamp((y - start) / Math.max(1, stop - start));
+    });
+  }
+
   /** Position de défilement qui affiche la forme i stable (pour les sauts d'index). */
   scrollFor(i: number): number {
     return i === 0 ? 0 : (this.anchors[i] ?? 0) + (this.holds[i] ?? 0) * 0.25;
