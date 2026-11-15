@@ -66,7 +66,7 @@ const ETUDES_DATA: readonly Etude[] = [
         id: 'panneaux',
         title: 'Deux panneaux, une image qui suit la lecture',
         text: [
-          "La mise en page repose sur une idée simple : à gauche, le contenu défile ; à droite, un grand panneau d'image reste en place. Quand on change de section, l'image change aussi, en fondu. Le site garde ainsi une présence visuelle forte sans jamais couper le texte.",
+          "La mise en page repose sur une idée simple : à gauche, le contenu défile ; à droite, un grand panneau d'image reste en place. Quand on change de section, l'image change aussi, en fondu. Le site reste donc très visuel, sans qu'une image vienne interrompre le texte.",
           "Chaque section déclare son image dans un attribut (data-image-slide-notifier). Un IntersectionObserver repère la section qui arrive en haut de l'écran ; la nouvelle image est préchargée, puis posée par-dessus l'ancienne avec un fondu GSAP. Sur mobile, le module se désactive et les images reprennent leur place dans le flux.",
         ],
         image: { src: `${BCF}/02-chiffres.webp`, alt: "Section bleue de l'accueil : 06 expertises majeures et 75 spécialités à gauche, 25 ans d'expérience à droite, sur une photo de tours de verre teintée en bleu.", width: 1440, height: 900 },
@@ -110,7 +110,7 @@ const ETUDES_DATA: readonly Etude[] = [
         text: [
           "Tout le JavaScript est écrit en TypeScript orienté objet. Une ModuleFactory parcourt la page et instancie la bonne classe pour chaque élément portant un attribut data-module ; un même élément peut en déclarer plusieurs, séparés par une barre verticale. Dix-sept modules couvrent le site : navigation, carrousels, recherche, formulaires, superpositions, vidéos, infobulles, consentement…",
           "Chaque module hérite d'une classe Module commune, qui lui fournit son IntersectionObserver et des méthodes appelées aux changements de point de rupture (onGroupDesktop, onGroupMobile). Les méthodes liées aux événements utilisent un décorateur @autobind plutôt que des bind() éparpillés.",
-          "Ce découpage comptait beaucoup dans un CMS comme Sitecore : les rédacteurs composent les pages, et chaque bloc arrive avec son comportement, peu importe où il est placé.",
+          "Dans Sitecore, ce découpage est utile : ce sont les rédacteurs qui composent les pages, et chaque bloc apporte son comportement, peu importe où il est placé.",
         ],
       },
       {
@@ -185,7 +185,7 @@ const ETUDES_DATA: readonly Etude[] = [
         title: 'Le mandat',
         text: [
           "Inspirer. Respirer. est la campagne d'attractivité de la MRC d'Argenteuil : convaincre des familles, des travailleurs et des entrepreneurs de s'installer dans l'une de ses neuf municipalités. Le site devait porter quatre grandes rubriques (habiter, vivre, travailler, entreprendre), une page par municipalité, un blogue, des vidéos, un babillard d'emplois et une charte d'inclusion à signer.",
-          "Beaucoup de pages, beaucoup de contenus différents, et une équipe qui allait les faire vivre pendant des années. Mon travail : la gestion et la structure du projet avec Bernard Imbert, puis toute la programmation, pour que le client puisse composer et enrichir ces pages lui-même. Le design est de Christine Martel.",
+          "Ça faisait beaucoup de pages aux contenus variés, que l'équipe du client allait faire vivre pendant des années. J'ai assuré la gestion et la structure du projet avec Bernard Imbert, puis toute la programmation, pour que le client puisse composer et enrichir ces pages lui-même. Le design est de Christine Martel.",
         ],
       },
       {
@@ -193,7 +193,7 @@ const ETUDES_DATA: readonly Etude[] = [
         title: 'Quinze blocs pour tout le site',
         text: [
           "Comme sur mes autres projets WordPress, aucune page n'est codée en dur : le thème expose une bibliothèque de blocs que le client empile dans l'administration. Ici, elle en compte une quinzaine : hero, texte, texte-image, carrousel, citation, liste, vignette, FAQ, formulaire, grille, galerie, blogue, vidéos, article et emplois.",
-          "Toutes les sections partagent la même enveloppe (section + grid-wrapper) ; chaque bloc, préfixé b-, ne s'occupe que de son contenu. Les pages de rubrique et celles des municipalités sont ainsi des recettes différentes faites avec les mêmes ingrédients.",
+          "Toutes les sections partagent la même enveloppe (section + grid-wrapper) ; chaque bloc, préfixé b-, ne s'occupe que de son contenu. Les pages de rubrique et celles des municipalités utilisent donc les mêmes blocs, combinés autrement.",
         ],
         blueprint: {
           caption: "Composition réelle des pages en ligne, relevée dans le HTML : chaque page est une pile de blocs choisie par le client.",
@@ -211,7 +211,7 @@ const ETUDES_DATA: readonly Etude[] = [
         title: 'Un système de couleurs par section',
         text: [
           "L'identité joue sur une palette vive : marine, vert, cyan, bleu pâle, rose, jaune, orange. Chaque rubrique a sa couleur, et chaque bloc expose trois réglages indépendants dans l'administration : le fond de la section, la couleur du contenu et celle des accents.",
-          "Côté code, ces choix deviennent de simples classes (sections--colors-section-marine, sections--colors-content-green, sections--colors-highlight-pink) qui ne font que définir des variables. Le bloc, lui, ne connaît que ces variables : n'importe quel bloc prend n'importe quelle combinaison sans une ligne de CSS de plus.",
+          "Côté code, ces choix deviennent de simples classes (sections--colors-section-marine, sections--colors-content-green, sections--colors-highlight-pink) qui ne font que définir des variables. Comme les blocs ne lisent que ces variables, chacun accepte n'importe quelle combinaison sans CSS supplémentaire.",
         ],
         image: { src: `${IR}/03-axes.webp`, alt: "Le bloc des quatre rubriques de l'accueil : Habiter en cyan, Vivre en rose, Travailler en orange et Entreprendre en marine, en damier avec des photos.", width: 1440, height: 1660, narrow: true },
       },
@@ -219,8 +219,8 @@ const ETUDES_DATA: readonly Etude[] = [
         id: 'biseaux',
         title: 'Des biseaux qui se raccordent',
         text: [
-          "La signature visuelle du site, ce sont les coupes en diagonale entre les sections. Elles sont dessinées en CSS (un dégradé à arrêt net, sans image) et activées par un modificateur : section--fig, inversé avec section--fig--reverse.",
-          "Le défi : le biseau doit prendre la couleur de la section précédente, alors que le client peut réordonner les blocs à volonté. Un réglage section--colors-previous-{couleur} permet de la fixer, et l'option « automatique » laisse le thème la déduire lui-même. Le client déplace un bloc, la jonction suit.",
+          "Les coupes en diagonale entre les sections sont la signature visuelle du site. Elles sont dessinées en CSS (un dégradé à arrêt net, sans image) et activées par un modificateur : section--fig, inversé avec section--fig--reverse.",
+          "Le biseau doit prendre la couleur de la section précédente, alors que le client peut réordonner les blocs à volonté. Un réglage section--colors-previous-{couleur} permet de fixer cette couleur, et l'option « automatique » laisse le thème la déduire : quand le client déplace un bloc, la jonction s'ajuste.",
         ],
         image: { src: `${IR}/02-couleurs.webp`, alt: "Page Habiter : une section marine, puis une section cyan avec un carrousel de photos, raccordées par une coupe en diagonale, suivie d'une citation sur photo.", width: 1440, height: 1900 },
       },
@@ -284,7 +284,7 @@ const ETUDES_DATA: readonly Etude[] = [
         id: 'charte',
         title: 'Une charte qu’on signe en ligne',
         text: [
-          "La page Nous sommes Argenteuil montre la souplesse du page builder : une grille de valeurs, une FAQ en accordéon pour la charte d'inclusion, puis un bloc formulaire pour la signer, et des vidéos de témoignages. Le formulaire est un bloc comme les autres, géré par une extension WordPress et habillé par le thème.",
+          "La page Nous sommes Argenteuil enchaîne plusieurs blocs : une grille de valeurs, une FAQ en accordéon pour la charte d'inclusion, puis un bloc formulaire pour la signer, et des vidéos de témoignages. Le formulaire est un bloc comme les autres, géré par une extension WordPress et habillé par le thème.",
         ],
         image: { src: `${IR}/06-charte.webp`, alt: "Page Nous sommes Argenteuil : la charte en accordéon sur fond vert, puis le formulaire « Signe la Charte d'engagement! » sur fond marine.", width: 1440, height: 1600, narrow: true },
       },
@@ -292,7 +292,7 @@ const ETUDES_DATA: readonly Etude[] = [
         id: 'mobile',
         title: 'Responsive par bloc',
         text: [
-          "Chaque bloc gère sa propre adaptation : le damier des rubriques passe en colonne, les biseaux gardent leur angle, les filtres d'emploi s'empilent. Une page composée par le client reste correcte sur téléphone, peu importe l'ordre des blocs.",
+          "Chaque bloc gère sa propre adaptation, donc une page reste correcte sur téléphone peu importe l'ordre choisi par le client. Le damier des rubriques passe en colonne, les biseaux gardent leur angle et les filtres d'emploi s'empilent.",
         ],
         phones: [
           { src: `${IR}/mobile-accueil.webp`, label: 'Accueil · hero', alt: "Accueil sur téléphone : logo Inspirer Respirer, titre « L'aventure d'une vie » et biseau marine." },
@@ -321,7 +321,7 @@ const ETUDES_DATA: readonly Etude[] = [
         id: 'mandat',
         title: 'Le mandat',
         text: [
-          "Un site municipal n'est pas un site qu'on visite pour le plaisir. On y vient pour une raison : trouver le prochain avis public, revoir la dernière séance du conseil, payer ses taxes, réserver un terrain de tennis. Le site de la Ville d'Estérel devait donc d'abord être clair, avec des dizaines de pages réparties en cinq grandes rubriques.",
+          "On visite un site municipal pour une raison précise : trouver le prochain avis public, revoir la dernière séance du conseil, payer ses taxes, réserver un terrain de tennis. Le site de la Ville d'Estérel devait donc d'abord être clair, avec des dizaines de pages réparties en cinq grandes rubriques.",
           "Il devait aussi rester simple à alimenter pour l'équipe de la Ville, qui publie régulièrement des actualités, des avis et des documents. Comme pour Inspirer. Respirer. et Synerlab, j'ai assuré la gestion et la structure du projet avec Bernard Imbert, puis toute la programmation, sur un design de Christine Martel.",
         ],
       },
@@ -404,14 +404,14 @@ const ETUDES_DATA: readonly Etude[] = [
         title: 'Le mandat',
         text: [
           "Synerlab, le centre d'innovation en économie circulaire de la MRC d'Argenteuil, devait présenter trois offres très différentes (facilitation, incubation, laboratoire industriel), plus un parc industriel et un appel à projets en continu. Et l'équipe devait pouvoir faire évoluer ces pages sans repasser par un développeur.",
-          "Mon rôle : la gestion et la structure du projet avec Bernard Imbert, puis toute la programmation. Le concept visuel venait du design ; mon travail, c'était de le transformer en système que le client peut manipuler.",
+          "J'ai assuré la gestion et la structure du projet avec Bernard Imbert, puis toute la programmation. Il fallait transformer le design de Christine Martel en un système que le client peut manipuler lui-même.",
         ],
       },
       {
         id: 'page-builder',
         title: 'Un page builder maison',
         text: [
-          "Plutôt que des gabarits figés, le thème expose une bibliothèque de blocs. Dans l'administration, le client empile les sections qu'il veut, dans l'ordre qu'il veut, et remplit leurs champs : aucune page n'est codée en dur.",
+          "Le thème expose une bibliothèque de blocs. Dans l'administration, le client empile les sections qu'il veut, dans l'ordre qu'il veut, et remplit leurs champs : aucune page n'est codée en dur.",
           "Dix blocs couvrent tout le site : hero, texte-image, cartes, blocs de couleur, icônes, texte simple, citation, partenaires, liste d'articles et formulaire. Chaque section partage la même enveloppe (o-section) ; le bloc ne s'occupe que de son contenu.",
         ],
         blueprint: {
@@ -427,10 +427,10 @@ const ETUDES_DATA: readonly Etude[] = [
       },
       {
         id: 'variantes',
-        title: 'Des variantes plutôt que des gabarits',
+        title: 'Des variantes par modificateurs',
         text: [
           "Un même bloc couvre plusieurs besoins grâce à des modificateurs : le hero devient bandeau autonome (--standalone) ou perd sa forme géométrique (--no-shape), le texte-image s'inverse (--reverse) ou fait chevaucher son média, une section bascule sur le fond de couleur de la marque (--quaterny).",
-          "Résultat : peu de code, beaucoup de combinaisons. Les trois pages de services utilisent exactement la même recette (texte, blocs de couleur, bandeau) et restent pourtant distinctes.",
+          "Avec peu de code, on obtient beaucoup de combinaisons. Les trois pages de services utilisent exactement la même suite de blocs (texte, blocs de couleur, bandeau) et restent pourtant distinctes.",
         ],
         image: { src: `${IMG}/02-axes.webp`, alt: "Le bloc « cartes » de l'accueil : trois tuiles photo avec un biseau de couleur.", width: 1440, height: 560 },
       },
@@ -465,7 +465,7 @@ const ETUDES_DATA: readonly Etude[] = [
         title: 'Des composants configurables par attributs',
         text: [
           "Chaque composant lit ses options dans le HTML. Header masque l'en-tête au défilement si data-auto-hide est présent et gère la navigation mobile. Scrolly révèle les éléments avec un IntersectionObserver, avec un décalage en cascade (data-stagger) ou en boucle (data-repeat). Carousel enveloppe Swiper.",
-          "Les blocs restent ainsi déclaratifs : le client choisit un bloc, le gabarit pose les bons attributs, la classe fait le reste.",
+          "Quand le client choisit un bloc, le gabarit pose les attributs et la classe s'occupe du comportement.",
         ],
         image: { src: `${IMG}/05-labo.webp`, alt: "Le bloc « blocs » de la page Laboratoire : quatre tuiles de couleur.", width: 1280, height: 460 },
       },
@@ -488,7 +488,7 @@ const ETUDES_DATA: readonly Etude[] = [
         id: 'mobile',
         title: 'Responsive par bloc',
         text: [
-          "Chaque bloc gère sa propre adaptation : les cartes s'empilent, le texte-image passe en colonne, la navigation bascule dans le menu mobile du composant Header. Une page composée par le client reste donc correcte sur téléphone, peu importe l'ordre des blocs.",
+          "Sur téléphone, les cartes s'empilent, le texte-image passe en colonne et la navigation bascule dans le menu mobile du composant Header. Comme chaque bloc gère sa propre adaptation, le client peut les placer dans n'importe quel ordre.",
         ],
         phones: [
           { src: `${IMG}/mobile-accueil.webp`, label: 'Accueil · text-image + cards', alt: "Accueil sur téléphone : le bloc texte-image passe en colonne et les cartes de services s'empilent." },
@@ -518,7 +518,7 @@ const ETUDES_DATA: readonly Etude[] = [
         title: 'Le mandat',
         text: [
           "En lunetterie, en orthodontie, en hygiène dentaire et en prothèses dentaires, beaucoup de mots du métier circulent d'abord en anglais (bracket, retainer, tie-wing), souvent sans traduction connue. Le projet Le français, au cœur de nos ambitions, financé par l'Office québécois de la langue française, voulait leur donner un équivalent français fiable.",
-          "C'est un gros projet multidisciplinaire : des professeures et professeurs de quatre départements ont rédigé les fiches, une terminologue et traductrice agréée les a révisées, et l'équipe de Techniques d'intégration multimédia a conçu et programmé le site. Résultat : quelque 600 concepts, chacun validé.",
+          "Le projet a réuni plusieurs disciplines. Des professeures et professeurs de quatre départements ont rédigé les fiches, une terminologue et traductrice agréée les a révisées, et l'équipe de Techniques d'intégration multimédia a conçu et programmé le site. Au total, quelque 600 concepts ont été validés.",
         ],
       },
       {
@@ -532,7 +532,7 @@ const ETUDES_DATA: readonly Etude[] = [
       },
       {
         id: 'domaines',
-        title: 'Les domaines comme colonne vertébrale',
+        title: 'Quatre domaines pour tout organiser',
         text: [
           "Les quatre domaines structurent tout : l'adresse de chaque fiche (/orthodontie/boitier/), la page de répertoire, les filtres de recherche et même la couleur. Une classe de thème par domaine (o-theme-orthodontie, par exemple) donne sa teinte à la carte, à la bannière et à l'étiquette, sans gabarit dupliqué.",
         ],
@@ -550,7 +550,7 @@ const ETUDES_DATA: readonly Etude[] = [
         id: 'recherche',
         title: 'Une recherche bilingue',
         text: [
-          "Un seul champ, en français ou en anglais. La recherche ignore les accents (« boitier » trouve « boîtier ») et parcourt les quatre domaines en même temps.",
+          "On cherche dans un seul champ, en français ou en anglais. La recherche ignore les accents (« boitier » trouve « boîtier ») et parcourt les quatre domaines en même temps.",
           "Les résultats arrivent avec des filtres par domaine et leur nombre de résultats. Tout passe par l'adresse (?s=boitier&d=orthodontie) : une recherche filtrée se partage ou se met en favori, et fonctionne sans JavaScript.",
         ],
         image: { src: `${MDT}/04-recherche.webp`, alt: "Résultats de recherche pour « boitier » : filtres Tous les domaines (12), Orthodontie (7), Prothèses dentaires (1), etc., puis des cartes de termes avec photo, équivalent anglais et définition.", width: 1440, height: 1560 },
@@ -639,7 +639,7 @@ const ETUDES_DATA: readonly Etude[] = [
         id: 'structure',
         title: 'Une page, sept sections',
         text: [
-          "Plutôt qu'un règlement à lire, la page raconte le programme dans l'ordre où un étudiant se pose les questions : c'est quoi, comment ça marche, qu'est-ce que je peux faire, qu'est-ce que ça me donne, où j'en suis, et à quoi ça sert après.",
+          "La page présente le programme dans l'ordre où un étudiant se pose les questions : c'est quoi, comment ça marche, qu'est-ce que je peux faire, qu'est-ce que ça me donne, où j'en suis, et à quoi ça sert après.",
           "Le fonctionnement, lui, tient en cinq étapes numérotées : s'inscrire, participer, gagner des points, les cumuler tout au long des études, puis obtenir la certification à 500 points.",
           "Chaque section a sa couleur (noir, violet, vert, jaune) pour que le passage de l'une à l'autre se sente au défilement, même sur téléphone.",
         ],
@@ -656,7 +656,7 @@ const ETUDES_DATA: readonly Etude[] = [
         text: [
           "Pour accumuler des points, les étudiants choisissent parmi six blocs d'activités : la réussite académique, l'enrichissement disciplinaire, les activités socioculturelles, l'engagement étudiant, les saines habitudes de vie, et l'engagement social et environnemental. Chaque bloc a un nom accrocheur (Objectif Réussite, Boost créatif, Vie TIM à fond…), quelques exemples concrets et un maximum de points.",
           "Ce plafond oblige à varier : on ne devient pas certifié en ne faisant qu'une seule sorte d'activité. Les cartes présentent donc les six blocs côte à côte, pour qu'un étudiant voie d'un coup d'œil où il peut encore aller chercher des points.",
-          "Les cartes réagissent à la souris : elles s'inclinent légèrement vers le curseur et reviennent en place avec un petit rebond. Un détail, mais il donne envie de les survoler une à une, donc de les lire.",
+          "Les cartes réagissent à la souris : elles s'inclinent légèrement vers le curseur et reviennent en place avec un petit rebond. Ça incite à les survoler une à une, donc à les lire.",
         ],
         image: { src: `${TP}/04-blocs.webp`, alt: "Section verte « 6 blocs d'activités qui pourraient t'intéresser » : cartes blanches Objectif Réussite, Boost créatif et Culture et passion, avec leurs activités et leur maximum de points.", width: 1440, height: 900 },
       },
@@ -710,7 +710,7 @@ const ETUDES_DATA: readonly Etude[] = [
         id: 'classement',
         title: 'Un classement pour jouer le jeu',
         text: [
-          "Le cœur ludique de la page, c'est le classement. Les points des étudiants sont récupérés de la plateforme du cégep, puis affichés sous forme de palmarès : le rang, les points et le statut atteint, avec une date de dernière mise à jour. Le premier porte l'autocollant du chat ULTIM.",
+          "Le classement est la partie la plus ludique de la page. Les points des étudiants sont récupérés de la plateforme du cégep, puis affichés sous forme de palmarès : le rang, les points et le statut atteint, avec une date de dernière mise à jour. Le premier porte l'autocollant du chat ULTIM.",
           "Seuls les cinq premiers sont visibles au départ ; le bouton « Voir le top 30 » déplie le reste de la liste. À l'entrée à l'écran, les rangées basculent une à une comme des cartes qu'on retourne.",
           "Sur cette page, les noms des étudiants sont floutés.",
         ],
