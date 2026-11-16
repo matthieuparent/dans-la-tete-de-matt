@@ -62,7 +62,7 @@ export class SectionMotion {
         num: q(intro ? '.sec__hero mark' : '.sec__text mark'),
         chars: title ? splitChars(title) : [],
         rows: q('.facts dt, .facts dd'),
-        rest: intro ? q('.sec__hero :is(.sec__id, .scroll-cue)') : [...q('.sec__text'), ...q('.sec__body > :is(details, .latest, .button, .sec__actions)')],
+        rest: intro ? q('.sec__hero .sec__id') : [...q('.sec__text'), ...q('.sec__body > :is(details, .latest, .button, .sec__actions)')],
       };
     });
   }

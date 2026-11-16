@@ -2,6 +2,8 @@
 /**
  * Sélecteur Explorer / Lire. Ce sont des liens (navigation réelle, fonctionne sans JS) ;
  * le routeur client les intercepte pour la bascule sans rechargement.
+ * Au survol (ou au focus clavier), le bouton s'élargit et le nom du mode s'écrit lettre par
+ * lettre à côté de l'icône : « Expérience », « Lecture ».
  */
 interface Props {
   mode: 'explorer' | 'lire';
@@ -11,6 +13,8 @@ const { mode, section } = Astro.props;
 const explorerHref = mode === 'lire' && section ? `/#${section}` : '/';
 const lireHref = section ? `/carnet/${section}` : '/carnet';
 // Explorer = un nuage de points (la matière du site) ; Lire = des lignes de texte.
+// Une lettre par span, avec son rang (--i) pour l'apparition en cascade.
+const modes = { explorer: [...'Expérience'], lire: [...'Lecture'] };
 const ring = Array.from({ length: 8 }, (_, i) => {
   const a = (i / 8) * Math.PI * 2;
   return [10 + Math.cos(a) * 7, 10 + Math.sin(a) * 6] as const;
@@ -18,17 +22,19 @@ const ring = Array.from({ length: 8 }, (_, i) => {
 ---
 
 <div class="mode-switch" role="group" aria-label="Mode d'affichage">
-  <a href={explorerHref} aria-current={mode === 'explorer' ? 'page' : undefined} data-mode-explorer title="Explorer">
+  <a href={explorerHref} aria-current={mode === 'explorer' ? 'page' : undefined} data-mode-explorer>
     <svg aria-hidden="true" width="22" height="20" viewBox="0 0 20 20" fill="currentColor">
       {ring.map(([x, y]) => <circle cx={x.toFixed(2)} cy={y.toFixed(2)} r="1.25" />)}
       <circle cx="8" cy="9" r="1.7" /><circle cx="12.4" cy="10.6" r="1.25" /><circle cx="10.6" cy="6.8" r="1" />
     </svg>
     <span class="sr-only">Explorer</span>
+    <span class="mode-switch__label" aria-hidden="true"><span>{modes.explorer.map((c, i) => <span style={`--i:${i}`}>{c}</span>)}</span></span>
   </a>
-  <a href={lireHref} aria-current={mode === 'lire' ? 'page' : undefined} data-mode-lire title="Lire">
+  <a href={lireHref} aria-current={mode === 'lire' ? 'page' : undefined} data-mode-lire>
     <svg aria-hidden="true" width="22" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="square">
       <path d="M3 5h14M3 10h14M3 15h9" />
     </svg>
     <span class="sr-only">Lire</span>
+    <span class="mode-switch__label" aria-hidden="true"><span>{modes.lire.map((c, i) => <span style={`--i:${i}`}>{c}</span>)}</span></span>
   </a>
 </div>

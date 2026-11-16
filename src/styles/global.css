@@ -297,6 +297,24 @@
   }
   .mode-switch a:not([aria-current]):hover { background: var(--hl); }
   .mode-switch a[aria-current] { background: var(--ink); color: var(--bg); }
+  .site-header__mode { display: flex; justify-content: flex-end; width: 196px; flex: none; }
+  @media (max-width: 899px) { .site-header__mode { display: contents; } }
+  /* Nom du mode dans le bouton : la colonne passe de 0 à sa largeur (0fr → 1fr), puis les
+     lettres arrivent une à une. À la sortie, tout se replie d'un coup. */
+  .mode-switch__label { display: grid; grid-template-columns: 0fr; transition: grid-template-columns 320ms var(--sweep-ease); }
+  .mode-switch__label > span { min-width: 0; overflow: hidden; white-space: nowrap; }
+  .mode-switch__label > span > span { display: inline-block; opacity: 0; translate: 0 0.5em; transition: opacity 120ms, translate 120ms; }
+  .mode-switch__label > span > span:first-child { margin-left: 8px; }
+  .mode-switch a:is(:hover, :focus-visible) .mode-switch__label { grid-template-columns: 1fr; }
+  .mode-switch a:is(:hover, :focus-visible) .mode-switch__label > span > span {
+    opacity: 1;
+    translate: 0 0;
+    transition: opacity 200ms, translate 320ms var(--sweep-ease);
+    transition-delay: calc(90ms + var(--i) * 32ms);
+  }
+  @media (hover: none) {
+    .mode-switch a:hover .mode-switch__label { grid-template-columns: 0fr; }
+  }
 
   .menu-button {
     display: none;
@@ -500,7 +518,20 @@
   .sec__id { margin: 0; font-size: clamp(15px, 1.15vw, 17px); line-height: 1.45; max-width: 560px; color: var(--muted); text-wrap: pretty; }
   .sec__id strong { font-weight: 500; color: var(--ink); }
   /* Invitation à défiler : un trait qui coule vers le bas, en boucle. */
-  .scroll-cue { display: inline-flex; align-items: center; gap: 14px; align-self: flex-start; min-height: 44px; font-size: 14px; color: var(--muted); transition: color 200ms; }
+  .scroll-cue {
+    position: fixed;
+    right: var(--gutter);
+    bottom: 20px;
+    z-index: 7;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 44px;
+    font-size: 14px;
+    color: var(--muted);
+    transition: color 200ms, opacity 400ms;
+  }
+  .scroll-cue.is-done { opacity: 0; pointer-events: none; }
   .scroll-cue:hover { color: var(--ink); }
   .scroll-cue__line { position: relative; width: 1px; height: 40px; overflow: hidden; background: var(--rule-2); }
   .scroll-cue__line::after {
@@ -734,6 +765,9 @@
     .sec--intro .facts dt { padding-left: 0; }
     .sec--carnet { min-height: 60svh; padding-bottom: 48px; }
 
+    /* Mobile : l'invitation passe par-dessus le texte ; un fond la garde lisible. */
+    .scroll-cue { bottom: calc(12px + env(safe-area-inset-bottom)); padding: 0 14px; font-size: 13px; background: var(--bg); border: 1px solid var(--rule-2); }
+    .scroll-cue__line { height: 28px; }
     /* Mobile : la barre défile à l'horizontale ; la case en cours revient au centre (Explorer). */
     .index ol { padding: 0; overflow-x: auto; }
     .index li { flex: 1 0 auto; }
@@ -1399,6 +1433,7 @@
   /* Bascule Explorer ↔ Lire (la page Lire et ses sorties sont animées par GSAP, PageMotion.ts). */
   .is-leaving .explorer .sec,
   .is-leaving .explorer .index ol,
+  .is-leaving .explorer .scroll-cue,
   .is-leaving .stage__labels {
     opacity: 0 !important;
     translate: 0 -48px;
@@ -1406,7 +1441,8 @@
     transition: opacity 0.4s ease-in, translate 0.5s cubic-bezier(0.5, 0, 0.75, 0), filter 0.4s ease-in;
   }
   .is-arriving .explorer .sec,
-  .is-arriving .explorer .index ol { opacity: 0; }
+  .is-arriving .explorer .index ol,
+  .is-arriving .explorer .scroll-cue { opacity: 0; }
   /* Aucun flash avant que GSAP prenne la main sur la page Lire. */
   .is-arriving .carnet, .is-arriving .article { opacity: 0; }
   .is-refiltering .carnet__chapter > *, .is-refiltering .notes > * { opacity: 0; }

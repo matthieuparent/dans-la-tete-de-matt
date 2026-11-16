@@ -91,10 +91,6 @@ const deSection = (label: string): string => {
         <div class="sec__hero">
           <h1 id="titre" class="display display--xl">Dans la tête<br /> de <mark>Matt</mark></h1>
           <p class="sec__id"><strong>{PROFILE.name}</strong>, {PROFILE.headline}</p>
-          <a class="scroll-cue" href="#projets" data-scroll-cue>
-            <span>Défiler pour explorer</span>
-            <span class="scroll-cue__line" aria-hidden="true"></span>
-          </a>
         </div>
       </div>
       <img class="sec__figure" src="/formes/intro.svg" width={STAGE_W} height={STAGE_H} alt="" loading="lazy" decoding="async" />
@@ -132,11 +128,11 @@ const deSection = (label: string): string => {
                   {lastBySection[s.id] && (
                     // Au survol, le libellé glisse et laisse voir le titre de l'article.
                     <a class="button button--swap" href={lastBySection[s.id]?.url}>
-                      <span class="button__face">Lire le dernier article<span class="sr-only"> : « {lastBySection[s.id]?.accroche} »</span></span>
+                      <span class="button__face">{s.id === 'projets' ? 'Voir le dernier projet' : 'Lire le dernier article'}<span class="sr-only"> : « {lastBySection[s.id]?.accroche} »</span></span>
                       <span class="button__face button__face--alt" aria-hidden="true">{lastBySection[s.id]?.accroche}</span>
                     </a>
                   )}
-                  <a class="button button--ghost" href={`/carnet/${s.id}`}>Voir tous les articles {deSection(s.label)}</a>
+                  <a class="button button--ghost" href={`/carnet/${s.id}`}>{s.id === 'projets' ? 'Voir tous les projets' : `Voir tous les articles ${deSection(s.label)}`}</a>
                 </p>
               </>
             )}
@@ -145,6 +141,12 @@ const deSection = (label: string): string => {
         </section>
       ))
     }
+
+    <!-- Invitation à défiler (coin bas droit) : un clic mène à la section suivante (cible tenue à jour par Explorer). -->
+    <a class="scroll-cue" href="#projets" data-scroll-cue>
+      <span>Défiler pour explorer</span>
+      <span class="scroll-cue__line" aria-hidden="true"></span>
+    </a>
 
     <!-- Index des sections : barre sous l'en-tête ; chaque case se remplit pendant qu'on lit sa section. -->
     <nav class="index" aria-label="Sections">

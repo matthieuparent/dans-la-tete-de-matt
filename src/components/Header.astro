@@ -31,7 +31,10 @@ const nav = [
       ))}
     </ul>
   </nav>
-  <ModeSwitch {mode} section={section && isCarnetSection(section) ? section : undefined} />
+  <!-- Place réservée au sélecteur élargi (survol) : la navigation ne bouge pas. -->
+  <div class="site-header__mode">
+    <ModeSwitch {mode} section={section && isCarnetSection(section) ? section : undefined} />
+  </div>
   <button class="menu-button" type="button" data-menu-open aria-haspopup="dialog" aria-expanded="false" aria-label="Ouvrir le menu">
     <svg aria-hidden="true" width="20" height="14" viewBox="0 0 20 14" stroke="currentColor" stroke-width="2"><line x1="0" y1="3" x2="20" y2="3"></line><line x1="0" y1="11" x2="13" y2="11"></line></svg>
   </button>

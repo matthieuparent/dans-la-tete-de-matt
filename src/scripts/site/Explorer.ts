@@ -118,6 +118,14 @@ export class Explorer {
         bar.scrollTo({ left, behavior: prefersReducedMotion() ? 'instant' : 'smooth' });
       }
     });
+    // L'invitation à défiler mène à la section suivante ; elle s'efface sur la dernière.
+    const next = SHAPE_IDS[i + 1];
+    const cue = this.root.querySelector<HTMLAnchorElement>('[data-scroll-cue]');
+    if (cue) {
+      if (next) cue.href = `#${next}`;
+      cue.classList.toggle('is-done', !next);
+      cue.toggleAttribute('inert', !next);
+    }
     // « Lire » ouvre le Carnet filtré sur la section en cours.
     const lire = isCarnetSection(id) ? `/carnet/${id}` : '/carnet';
     document.querySelectorAll<HTMLAnchorElement>('[data-mode-lire]').forEach((a) => (a.href = lire));
