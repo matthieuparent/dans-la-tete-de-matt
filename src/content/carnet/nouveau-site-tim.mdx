@@ -1,10 +1,123 @@
 ---
-title: "Nouveau site TIM"
-description: "Les coulisses du nouveau site du programme Techniques d'intégration multimédia."
-date: 2026-11-08
+title: "Nouveau site TIM : mon premier projet avec l'IA"
+highlight: mon premier projet avec l'IA
+accroche: Nouveau site TIM
+description: "Le site du programme TIM devait changer vite. J'en ai profité pour faire mon premier projet avec l'IA, de la maquette jusqu'aux « easter eggs »."
+date: 2026-11-24
 section: projets
-related: [enseignement]
-upcoming: true
+related: [ia, enseignement]
+image: /carnet/site-tim/og.jpg
+thumb: /carnet/site-tim/vignette-16x10.webp
 ---
 
-[Article à venir.]
+Depuis quelque temps, j'entends énormément parler d'intelligence artificielle dans le milieu du Web. Comme développeur, et comme enseignant en Techniques d'intégration multimédia (TIM), je trouve cette évolution aussi fascinante que déstabilisante. On voit passer des démonstrations impressionnantes, mais regarder quelqu'un utiliser ces outils, c'est autre chose que de les intégrer à son propre processus de création. La refonte du site de notre programme était l'occasion idéale de me lancer dans un premier vrai projet avec l'IA.
+
+<Photo
+  src="/carnet/site-tim/intro.webp"
+  alt="Accueil du site dectim.ca : le slogan « Humain + IA, créer autrement. L'avenir est collaboratif » en très gros caractères, traversé par une traînée de petites formes colorées qui suit la souris."
+  width={1600}
+  height={900}
+  caption="L'accueil de dectim.ca. Les particules suivent la souris."
+  wide
+/>
+
+## Une refonte qui se faisait attendre
+
+Ça faisait déjà plusieurs années que le site de notre programme avait besoin d'un peu d'amour. Il prenait de l'âge et ne représentait plus ce qu'on fait en TIM, ce qui est un peu ironique pour un programme qui enseigne la conception et le développement Web! Il y avait aussi un enjeu technique : on devait mettre à jour la version de PHP du serveur, et vu la façon dont l'ancien site était construit, l'opération risquait d'être plus compliquée qu'elle en avait l'air. Tant qu'à y investir du temps, aussi bien repartir sur de nouvelles bases.
+
+On avait aussi une échéance : un nouveau site en ligne bien avant les portes ouvertes et la période d'inscription au cégep, en mars. Comme souvent avec ce genre de projet, qui s'ajoute à nos tâches d'enseignement, le vrai défi était de trouver le temps. Le résultat est maintenant en ligne sur [dectim.ca](https://dectim.ca/).
+
+## Une question qu'on ne pouvait pas ignorer
+
+Avant même de parler de design ou de programmation, Jean-François Leblanc et moi avions passé beaucoup de temps à réfléchir au contenu. Qu'est-ce qu'on voulait mettre de l'avant? Quelles sont les préoccupations des futurs étudiants et de leurs parents? L'IA prenait évidemment beaucoup de place dans nos discussions. Pourquoi s'inscrire à un programme de trois ans pour apprendre à concevoir des produits numériques, alors que l'IA semble capable de générer des sites, des images et des applications en quelques minutes? La question est légitime, et ce serait maladroit de faire comme si elle n'existait pas.
+
+On voulait donc montrer que l'IA fait partie de l'évolution du programme. On forme des créateurs capables de diriger un processus de création où l'IA prend de plus en plus de place. Je trouvais d'ailleurs intéressant que le site qui porte ce message devienne mon premier terrain d'expérimentation avec elle.
+
+<Photo
+  src="/carnet/site-tim/nous-aussi.webp"
+  alt="Section orange du site : « Le numérique change. Nous aussi. » En dessous, la phrase « On ne forme pas des utilisateurs d'outils » est barrée et remplacée par « On forme des créateurs capables de s'adapter »."
+  width={1600}
+  height={900}
+  caption="Le message principal du site, en une section."
+/>
+
+## Une maquette avec Figma Make
+
+Habituellement, la conception d'un site institutionnel prend du temps : il faut proposer des pistes graphiques, les présenter, recueillir les commentaires, modifier, puis recommencer. Quand il faut coordonner plusieurs personnes à l'horaire déjà chargé, le processus s'étire vite. Pour ce projet, j'ai essayé autre chose. J'ai soumis à Figma Make le résumé de notre analyse, nos objectifs et les grandes lignes du contenu, et je lui ai demandé une première maquette. Je ne m'attendais pas à un résultat parfait du premier coup; je voulais surtout quelque chose de concret sur quoi travailler, plutôt qu'une page blanche.
+
+Avec l'aide de Caroline Duplantis et de Catherine Lachapelle, on a ajusté cette proposition, et j'ai fait quelques retouches de mon côté. Pendant ce temps, j'avais déjà commencé l'intégration.
+
+## Coder moi-même, déléguer ce qui me tente moins
+
+Pour le développement, je voulais expérimenter avec l'assistant IA intégré à Zed, mon éditeur de code. Je ne voulais pas pour autant lui demander un site complet et attendre le résultat : j'aime encore beaucoup programmer, et après toutes ces années à faire du Web, voir une idée prendre vie à l'écran reste très satisfaisant. Je réalisais donc moi-même ce que j'avais envie de faire, et je déléguais à l'IA les tâches plus fastidieuses, souvent des choses que je savais très bien faire, mais qui allaient me prendre du temps.
+
+J'ai commencé par monter toute la structure de base avec TimTools, l'environnement de développement front-end que Jean-François et moi avons préparé : un thème WordPress, des composantes JavaScript orientées objet et une architecture SCSS. Chaque comportement interactif y est une classe JavaScript qu'on associe à un élément HTML. Je tenais à ce que l'IA respecte cette architecture, pour que le code généré s'intègre à mon projet sans que j'aie à adapter le projet au code.
+
+<Photo
+  src="/carnet/site-tim/projets.webp"
+  alt="Section des projets étudiants sur fond noir : une installation interactive où deux personnes imitent des silhouettes projetées, le logo du portfolio d'Alexis Proteau, une capture de site web en perspective et un robot en 3D."
+  width={1600}
+  height={900}
+  caption="Les projets étudiants. Les images sont rendues en WebGL et ondulent au défilement et au survol."
+/>
+
+La citation « TIM, c'est là où tout se rencontre » en est un bon exemple. Je voulais deux formes, une orange et une mauve, qui se déplacent de façon organique et fusionnent quand elles se rapprochent, un peu comme des gouttes de liquide. Je savais que j'étais capable de faire cet effet, mais aussi que j'allais passer beaucoup de temps à jouer avec les paramètres pour obtenir le bon comportement. J'ai donc expliqué à l'IA ce que je voulais et je lui ai demandé une classe JavaScript qui respecte la structure de mes composantes.
+
+<Photo
+  src="/carnet/site-tim/blob.webp"
+  alt="La citation « TIM, c'est là où tout se rencontre » en gros caractères noirs, devant des formes orange et mauves qui fusionnent entre elles."
+  width={1600}
+  height={595}
+  caption="Les formes derrière la citation se déplacent et fusionnent en continu."
+  wide
+/>
+
+L'idée créative reste la mienne : c'est moi qui décide de l'effet et de sa place dans la page. Je passe simplement moins de temps sur la réalisation technique, et ce temps, je peux l'investir ailleurs dans le projet.
+
+## À la vitesse de l'éclair
+
+Il y a quelque chose d'assez impressionnant à regarder l'IA travailler directement sur son ordinateur. Voir des lignes de code s'ajouter et des fichiers se modifier à une vitesse à laquelle je serais incapable de programmer, c'est particulier. Plus j'avançais, plus j'avais envie de pousser l'expérimentation.
+
+Dans mes projets Web, il y a souvent de petites idées que j'aimerais intégrer juste pour le plaisir, mais qui finissent abandonnées faute de temps. Elles ne sont pas essentielles, mais elles donnent de la personnalité au site. Cette fois, j'ai demandé à l'IA de m'aider à intégrer quelques « easter eggs », ces fonctionnalités cachées que les visiteurs découvrent en explorant. Le résultat m'a franchement impressionné, et je me suis beaucoup amusé avec cette partie du projet.
+
+Je ne vous dirai évidemment pas comment les trouver, ce serait gâcher le plaisir! Un seul indice : l'un d'eux brouille complètement l'écran et cache un « spoiler » non officiel du futur de notre technique. C'est d'ailleurs ce qui m'intéresse le plus dans cette façon de travailler : l'IA me permet d'explorer des idées que j'aurais écartées avant, simplement parce que je n'avais pas le temps de les réaliser.
+
+<Photo
+  src="/carnet/site-tim/easter-egg-transition.webp"
+  alt="L'accueil du site assombri, avec le titre dédoublé et décalé en rouge, vert et bleu, comme un signal brouillé."
+  width={1600}
+  height={900}
+  caption="Un des « easter eggs », au moment où l'écran se brouille."
+/>
+
+## La mise en ligne
+
+J'ai aussi beaucoup apprécié l'aide de l'IA pour préparer la mise en ligne. Ce n'est pas la partie la plus excitante d'un projet Web, mais un site qui prend une éternité à charger ou qui est difficile d'accès rate une partie de son objectif. L'IA m'a accompagné dans plusieurs étapes d'optimisation :
+
+- la conversion des images en AVIF et en WebP, qui fait passer leur poids d'environ 4,9 Mo à 0,3 Mo;
+- le chargement de Three.js seulement quand les projets étudiants apparaissent à l'écran, ce qui réduit le JavaScript initial de 240 Ko à 108 Ko compressés;
+- la révision de l'accessibilité et du référencement naturel.
+
+Toutes ces tâches faisaient déjà partie de mon processus habituel. Encore une fois, la différence se trouve dans le temps que j'ai dû y consacrer.
+
+<Photo
+  src="/carnet/site-tim/apres.webp"
+  alt="Section « Et après? » listant les métiers : penseur créatif, designer UX/UI, artiste 3D, créateur·rice numérique. Une traînée de particules colorées traverse la liste."
+  width={1600}
+  height={900}
+  caption="La section « Et après? », avec les mêmes particules qu'à l'accueil."
+/>
+
+## Ce que ça change pour moi
+
+Je ne suis pas sorti de ce projet avec l'impression de ne plus avoir besoin de savoir programmer. Mes connaissances en développement m'ont permis de diriger l'IA, de lui imposer une architecture et de comprendre ce qu'elle faisait. Je commence par contre à voir autrement la façon dont je pourrais investir mon temps. Si j'en passe moins à écrire du code pour des choses que je maîtrise déjà, est-ce que je peux en consacrer davantage à l'expérience utilisateur, à de nouvelles interactions ou à des idées que je n'aurais jamais eu le temps de réaliser?
+
+Comme enseignant, la réflexion va plus loin. Si ma façon de travailler change, comment adapter la façon dont on forme nos étudiants? Quelles connaissances doivent-ils absolument maîtriser, et quelles tâches peuvent-ils apprendre à déléguer? Surtout, comment leur apprendre à porter un regard critique sur ce que l'IA leur propose? Je n'ai pas encore toutes les réponses, mais je pense que la meilleure façon d'avancer est d'expérimenter nous-mêmes avec ces outils.
+
+## On reste imputable de ce qu'on livre
+
+Le nouveau site de TIM est en ligne bien avant les portes ouvertes, donc l'objectif de départ est atteint. Comme je le disais au retour de [Web Unleashed](/carnet/ia/web-unleashed-2026), peu importe la place que prend l'IA dans notre production, on demeure imputable de ce qu'on livre. Si une fonctionnalité brise ou si le site a des problèmes d'accessibilité, je ne peux pas mettre la faute sur l'IA. C'est moi qui ai choisi de l'utiliser, et c'est moi qui ai décidé de mettre le résultat en ligne.
+
+## Et si je n'écrivais plus une seule ligne de code?
+
+Pour ce premier projet, j'avais volontairement gardé une grande partie de la programmation. Une fois le site terminé, je me suis demandé jusqu'où je pourrais aller en déléguant toute la programmation à l'IA. Est-ce que je serais capable de réaliser un projet qui me ressemble et qui respecte mes exigences techniques et créatives, sans écrire moi-même une seule ligne de code? C'est le défi que je me suis lancé pour mon projet suivant, la refonte de mon portfolio. Vous êtes justement en train de le consulter.
